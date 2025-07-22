@@ -1,0 +1,55 @@
+.drop-zone {
+    border: 2px dashed #ccc;
+    border-radius: 10px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.drop-zone:hover {
+    border-color: #0d6efd;
+    background-color: #f8f9fa;
+}
+
+.drop-zone.dragover {
+    border-color: #0d6efd;
+    background-color: #e7f3ff;
+}
+
+.drop-zone-text {
+    margin: 0;
+    color: #6c757d;
+}
+
+.file-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    margin: 5px 0;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+}
+
+.stat-link {
+    color: #0d6efd;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.stat-link:hover {
+    text-decoration: underline;
+}
+
+.stats-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+}
+
+.table-container {
+    max-height: 500px;
+    overflow-y: auto;
+}

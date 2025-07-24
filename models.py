@@ -10,12 +10,12 @@ from typing import Dict, List, Optional, Any
 
 # Импорт psycopg2 с обработкой ошибок для статического анализа
 try:
-    import psycopg2
+    import psycopg2  # type: ignore
     from psycopg2.extras import RealDictCursor  # type: ignore
 except ImportError:
     # Fallback для статического анализа
-    psycopg2 = None
-    RealDictCursor = None
+    psycopg2 = None  # type: ignore
+    RealDictCursor = None  # type: ignore
 
 
 class Database:
@@ -197,7 +197,7 @@ class Database:
         """Создание схемы SQLite согласно обновленному ТЗ"""
         # Читаем схему из файла
         try:
-            with open('schema_updated.sql', 'r', encoding='utf-8') as f:
+            with open('schema_final.sql', 'r', encoding='utf-8') as f:
                 schema_sql = f.read()
         except FileNotFoundError:
             # Fallback к встроенной схеме
@@ -351,8 +351,12 @@ class Database:
         commands = [cmd.strip() for cmd in schema_sql.split(';') if cmd.strip()]
         cursor = self.connection.cursor()
         for command in commands:
-            if command:
-                cursor.execute(command)
+            if command and not command.startswith('--'):
+                try:
+                    cursor.execute(command)
+                except sqlite3.OperationalError as e:
+                    if "already exists" not in str(e):
+                        print(f"Warning: SQL command failed: {e}")
         self.connection.commit()
         cursor.close()
     

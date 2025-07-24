@@ -1,0 +1,668 @@
+{% extends "base.html" %}
+
+{% block title %}Просмотр отчетов по типам - VHM24R{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Боковая панель с типами отчетов -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-file-earmark-text"></i> Типы отчетов
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        <a href="#" class="list-group-item list-group-item-action report-type-link active" 
+                           data-type="happy_workers">
+                            <i class="bi bi-file-earmark-check text-primary"></i>
+                            <strong>Happy Workers</strong>
+                            <span class="badge bg-primary rounded-pill float-end" id="hw-count">0</span>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action report-type-link" 
+                           data-type="vendhub">
+                            <i class="bi bi-file-earmark-code text-success"></i>
+                            <strong>VendHub</strong>
+                            <span class="badge bg-success rounded-pill float-end" id="vh-count">0</span>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action report-type-link" 
+                           data-type="fiscal_bills">
+                            <i class="bi bi-receipt text-warning"></i>
+                            <strong>Фискальные чеки</strong>
+                            <span class="badge bg-warning rounded-pill float-end" id="fiscal-count">0</span>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action report-type-link" 
+                           data-type="payme">
+                            <i class="bi bi-credit-card text-info"></i>
+                            <strong>Payme</strong>
+                            <span class="badge bg-info rounded-pill float-end" id="payme-count">0</span>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action report-type-link" 
+                           data-type="click">
+                            <i class="bi bi-credit-card-2-front text-secondary"></i>
+                            <strong>Click</strong>
+                            <span class="badge bg-secondary rounded-pill float-end" id="click-count">0</span>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action report-type-link" 
+                           data-type="uzum">
+                            <i class="bi bi-credit-card-2-back text-dark"></i>
+                            <strong>Uzum</strong>
+                            <span class="badge bg-dark rounded-pill float-end" id="uzum-count">0</span>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action report-type-link" 
+                           data-type="bank_statement">
+                            <i class="bi bi-bank text-danger"></i>
+                            <strong>Банковские выписки</strong>
+                            <span class="badge bg-danger rounded-pill float-end" id="bank-count">0</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Статистика -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-bar-chart"></i> Статистика
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <h4 class="text-primary mb-0" id="total-files">0</h4>
+                                <small class="text-muted">Файлов</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-success mb-0" id="total-records">0</h4>
+                            <small class="text-muted">Записей</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Основная область просмотра -->
+        <div class="col-md-9">
+            <!-- Фильтры -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label">Период с:</label>
+                            <input type="date" class="form-control" id="date-from">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Период по:</label>
+                            <input type="date" class="form-control" id="date-to">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Файл:</label>
+                            <input type="text" class="form-control" id="file-filter" 
+                                   placeholder="Поиск по имени файла">
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-primary" onclick="applyFilters()">
+                                <i class="bi bi-funnel"></i> Применить
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="clearFilters()">
+                                <i class="bi bi-x-circle"></i> Очистить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Заголовок с действиями -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 id="report-title">
+                    <i class="bi bi-file-earmark-check"></i> 
+                    Happy Workers
+                </h4>
+                <div>
+                    <button class="btn btn-success" onclick="exportCurrentReport()">
+                        <i class="bi bi-download"></i> Экспорт Excel
+                    </button>
+                    <button class="btn btn-outline-success" onclick="exportCurrentReport('csv')">
+                        <i class="bi bi-filetype-csv"></i> Экспорт CSV
+                    </button>
+                    <button class="btn btn-info" onclick="refreshData()">
+                        <i class="bi bi-arrow-clockwise"></i> Обновить
+                    </button>
+                </div>
+            </div>
+
+            <!-- Таблица данных -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="data-table">
+                            <thead class="table-light">
+                                <tr id="table-headers">
+                                    <!-- Заголовки будут добавлены динамически -->
+                                </tr>
+                            </thead>
+                            <tbody id="table-body">
+                                <!-- Данные будут добавлены динамически -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Пагинация -->
+                    <nav aria-label="Навигация по страницам">
+                        <ul class="pagination justify-content-center" id="pagination">
+                            <!-- Пагинация будет добавлена динамически -->
+                        </ul>
+                    </nav>
+
+                    <!-- Индикатор загрузки -->
+                    <div class="text-center d-none" id="loading-indicator">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Загрузка...</span>
+                        </div>
+                        <p class="mt-2">Загрузка данных...</p>
+                    </div>
+
+                    <!-- Сообщение об отсутствии данных -->
+                    <div class="text-center d-none" id="no-data-message">
+                        <i class="bi bi-inbox display-1 text-muted"></i>
+                        <h5 class="text-muted mt-3">Нет данных для отображения</h5>
+                        <p class="text-muted">Попробуйте изменить фильтры или загрузить файлы этого типа</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для деталей записи -->
+<div class="modal fade" id="recordDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Детали записи</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="record-details-content">
+                    <!-- Детали записи будут добавлены динамически -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Глобальные переменные
+let currentReportType = 'happy_workers';
+let currentPage = 1;
+let totalPages = 1;
+let currentData = [];
+
+// Конфигурация колонок для каждого типа отчета
+const reportColumns = {
+    happy_workers: [
+        { key: 'file_name', title: 'Файл', width: '150px' },
+        { key: 'order_number', title: 'Номер заказа', width: '120px' },
+        { key: 'machine_code', title: 'Код автомата', width: '100px' },
+        { key: 'goods_name', title: 'Товар', width: '200px' },
+        { key: 'order_price', title: 'Цена', width: '80px', type: 'currency' },
+        { key: 'creation_time', title: 'Время создания', width: '150px', type: 'datetime' },
+        { key: 'payment_status', title: 'Статус оплаты', width: '120px' },
+        { key: 'upload_date', title: 'Дата загрузки', width: '150px', type: 'datetime' }
+    ],
+    vendhub: [
+        { key: 'file_name', title: 'Файл', width: '150px' },
+        { key: 'order_number', title: 'Номер заказа', width: '120px' },
+        { key: 'machine_code', title: 'Код автомата', width: '100px' },
+        { key: 'goods_name', title: 'Товар', width: '200px' },
+        { key: 'order_price', title: 'Цена', width: '80px', type: 'currency' },
+        { key: 'payment_type', title: 'Тип оплаты', width: '120px' },
+        { key: 'username', title: 'Пользователь', width: '120px' },
+        { key: 'time_event', title: 'Время события', width: '150px', type: 'datetime' }
+    ],
+    fiscal_bills: [
+        { key: 'file_name', title: 'Файл', width: '150px' },
+        { key: 'fiscal_check_number', title: 'Номер чека', width: '120px' },
+        { key: 'amount', title: 'Сумма', width: '80px', type: 'currency' },
+        { key: 'taxpayer_id', title: 'ИНН', width: '120px' },
+        { key: 'fiscal_time', title: 'Время фискализации', width: '150px', type: 'datetime' },
+        { key: 'cash_register_id', title: 'ID кассы', width: '100px' },
+        { key: 'upload_date', title: 'Дата загрузки', width: '150px', type: 'datetime' }
+    ],
+    payme: [
+        { key: 'file_name', title: 'Файл', width: '150px' },
+        { key: 'transaction_id', title: 'ID транзакции', width: '150px' },
+        { key: 'amount', title: 'Сумма', width: '80px', type: 'currency' },
+        { key: 'masked_pan', title: 'Карта', width: '120px' },
+        { key: 'merchant_id', title: 'ID мерчанта', width: '120px' },
+        { key: 'status', title: 'Статус', width: '100px' },
+        { key: 'transaction_time', title: 'Время транзакции', width: '150px', type: 'datetime' }
+    ],
+    click: [
+        { key: 'file_name', title: 'Файл', width: '150px' },
+        { key: 'transaction_id', title: 'ID транзакции', width: '150px' },
+        { key: 'amount', title: 'Сумма', width: '80px', type: 'currency' },
+        { key: 'card_number', title: 'Номер карты', width: '120px' },
+        { key: 'merchant_id', title: 'ID мерчанта', width: '120px' },
+        { key: 'status', title: 'Статус', width: '100px' },
+        { key: 'transaction_time', title: 'Время транзакции', width: '150px', type: 'datetime' }
+    ],
+    uzum: [
+        { key: 'file_name', title: 'Файл', width: '150px' },
+        { key: 'transaction_id', title: 'ID транзакции', width: '150px' },
+        { key: 'amount', title: 'Сумма', width: '80px', type: 'currency' },
+        { key: 'masked_pan', title: 'Карта', width: '120px' },
+        { key: 'shop_id', title: 'ID магазина', width: '120px' },
+        { key: 'status', title: 'Статус', width: '100px' },
+        { key: 'transaction_time', title: 'Время транзакции', width: '150px', type: 'datetime' }
+    ]
+};
+
+// Названия отчетов
+const reportTitles = {
+    happy_workers: 'Happy Workers',
+    vendhub: 'VendHub',
+    fiscal_bills: 'Фискальные чеки',
+    payme: 'Payme',
+    click: 'Click',
+    uzum: 'Uzum',
+    bank_statement: 'Банковские выписки'
+};
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    loadStatistics();
+    loadReportData(currentReportType);
+    
+    // Обработчики событий для переключения типов отчетов
+    document.querySelectorAll('.report-type-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Убираем активный класс со всех ссылок
+            document.querySelectorAll('.report-type-link').forEach(l => l.classList.remove('active'));
+            
+            // Добавляем активный класс к текущей ссылке
+            this.classList.add('active');
+            
+            // Получаем тип отчета
+            const reportType = this.getAttribute('data-type');
+            currentReportType = reportType;
+            currentPage = 1;
+            
+            // Обновляем заголовок
+            document.getElementById('report-title').innerHTML = 
+                `<i class="bi bi-${getReportIcon(reportType)}"></i> ${reportTitles[reportType]}`;
+            
+            // Загружаем данные
+            loadReportData(reportType);
+        });
+    });
+});
+
+// Загрузка статистики
+async function loadStatistics() {
+    try {
+        const response = await fetch('/api/reports/statistics');
+        const data = await response.json();
+        
+        if (data.success) {
+            // Обновляем общую статистику
+            document.getElementById('total-files').textContent = data.total.total_files || 0;
+            document.getElementById('total-records').textContent = data.total.total_records || 0;
+            
+            // Обновляем счетчики по типам
+            data.by_type.forEach(stat => {
+                const countElement = document.getElementById(`${stat.file_type.replace('_', '-')}-count`);
+                if (countElement) {
+                    countElement.textContent = stat.total_records || 0;
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Error loading statistics:', error);
+    }
+}
+
+// Загрузка данных отчета
+async function loadReportData(reportType, page = 1) {
+    showLoading(true);
+    
+    try {
+        const filters = getFilters();
+        filters.limit = 50;
+        filters.offset = (page - 1) * 50;
+        
+        const params = new URLSearchParams(filters);
+        const response = await fetch(`/api/reports/data/${reportType}?${params}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            currentData = data.data;
+            currentPage = page;
+            totalPages = Math.ceil(data.total / 50);
+            
+            renderTable(reportType, data.data);
+            renderPagination();
+            
+            if (data.data.length === 0) {
+                showNoData(true);
+            } else {
+                showNoData(false);
+            }
+        } else {
+            throw new Error(data.error || 'Ошибка загрузки данных');
+        }
+    } catch (error) {
+        console.error('Error loading report data:', error);
+        showError('Ошибка загрузки данных: ' + error.message);
+    } finally {
+        showLoading(false);
+    }
+}
+
+// Отображение таблицы
+function renderTable(reportType, data) {
+    const columns = reportColumns[reportType] || [];
+    const headersRow = document.getElementById('table-headers');
+    const tbody = document.getElementById('table-body');
+    
+    // Очищаем таблицу
+    headersRow.innerHTML = '';
+    tbody.innerHTML = '';
+    
+    // Создаем заголовки
+    columns.forEach(column => {
+        const th = document.createElement('th');
+        th.textContent = column.title;
+        th.style.width = column.width;
+        headersRow.appendChild(th);
+    });
+    
+    // Добавляем колонку действий
+    const actionTh = document.createElement('th');
+    actionTh.textContent = 'Действия';
+    actionTh.style.width = '100px';
+    headersRow.appendChild(actionTh);
+    
+    // Создаем строки данных
+    data.forEach((record, index) => {
+        const tr = document.createElement('tr');
+        
+        columns.forEach(column => {
+            const td = document.createElement('td');
+            const value = record[column.key];
+            
+            if (column.type === 'currency' && value) {
+                td.textContent = formatCurrency(value);
+            } else if (column.type === 'datetime' && value) {
+                td.textContent = formatDateTime(value);
+            } else {
+                td.textContent = value || '-';
+            }
+            
+            tr.appendChild(td);
+        });
+        
+        // Добавляем колонку действий
+        const actionTd = document.createElement('td');
+        actionTd.innerHTML = `
+            <button class="btn btn-sm btn-outline-primary" onclick="showRecordDetails(${index})">
+                <i class="bi bi-eye"></i>
+            </button>
+        `;
+        tr.appendChild(actionTd);
+        
+        tbody.appendChild(tr);
+    });
+}
+
+// Отображение пагинации
+function renderPagination() {
+    const pagination = document.getElementById('pagination');
+    pagination.innerHTML = '';
+    
+    if (totalPages <= 1) return;
+    
+    // Предыдущая страница
+    const prevLi = document.createElement('li');
+    prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+    prevLi.innerHTML = `
+        <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">
+            <i class="bi bi-chevron-left"></i>
+        </a>
+    `;
+    pagination.appendChild(prevLi);
+    
+    // Номера страниц
+    const startPage = Math.max(1, currentPage - 2);
+    const endPage = Math.min(totalPages, currentPage + 2);
+    
+    for (let i = startPage; i <= endPage; i++) {
+        const li = document.createElement('li');
+        li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+        li.innerHTML = `
+            <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+        `;
+        pagination.appendChild(li);
+    }
+    
+    // Следующая страница
+    const nextLi = document.createElement('li');
+    nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+    nextLi.innerHTML = `
+        <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">
+            <i class="bi bi-chevron-right"></i>
+        </a>
+    `;
+    pagination.appendChild(nextLi);
+}
+
+// Изменение страницы
+function changePage(page) {
+    if (page >= 1 && page <= totalPages && page !== currentPage) {
+        loadReportData(currentReportType, page);
+    }
+}
+
+// Получение фильтров
+function getFilters() {
+    const filters = {};
+    
+    const dateFrom = document.getElementById('date-from').value;
+    if (dateFrom) filters.date_from = dateFrom;
+    
+    const dateTo = document.getElementById('date-to').value;
+    if (dateTo) filters.date_to = dateTo;
+    
+    const fileFilter = document.getElementById('file-filter').value;
+    if (fileFilter) filters.file_name = fileFilter;
+    
+    return filters;
+}
+
+// Применение фильтров
+function applyFilters() {
+    currentPage = 1;
+    loadReportData(currentReportType, 1);
+}
+
+// Очистка фильтров
+function clearFilters() {
+    document.getElementById('date-from').value = '';
+    document.getElementById('date-to').value = '';
+    document.getElementById('file-filter').value = '';
+    applyFilters();
+}
+
+// Обновление данных
+function refreshData() {
+    loadStatistics();
+    loadReportData(currentReportType, currentPage);
+}
+
+// Экспорт отчета
+async function exportCurrentReport(format = 'excel') {
+    try {
+        const filters = getFilters();
+        const params = new URLSearchParams(filters);
+        params.append('format', format);
+        
+        const response = await fetch(`/api/reports/export/${currentReportType}?${params}`);
+        
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${currentReportType}_${new Date().toISOString().split('T')[0]}.${format === 'excel' ? 'xlsx' : 'csv'}`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } else {
+            throw new Error('Ошибка экспорта');
+        }
+    } catch (error) {
+        console.error('Export error:', error);
+        showError('Ошибка экспорта: ' + error.message);
+    }
+}
+
+// Показ деталей записи
+function showRecordDetails(index) {
+    const record = currentData[index];
+    if (!record) return;
+    
+    const content = document.getElementById('record-details-content');
+    content.innerHTML = '';
+    
+    // Создаем таблицу с деталями
+    const table = document.createElement('table');
+    table.className = 'table table-striped';
+    
+    Object.keys(record).forEach(key => {
+        if (key === 'id' || key === 'row_number') return;
+        
+        const tr = document.createElement('tr');
+        const keyTd = document.createElement('td');
+        const valueTd = document.createElement('td');
+        
+        keyTd.innerHTML = `<strong>${getFieldName(key)}</strong>`;
+        
+        let value = record[key];
+        if (key.includes('time') || key.includes('date')) {
+            value = formatDateTime(value);
+        } else if (key.includes('price') || key.includes('amount')) {
+            value = formatCurrency(value);
+        }
+        
+        valueTd.textContent = value || '-';
+        
+        tr.appendChild(keyTd);
+        tr.appendChild(valueTd);
+        table.appendChild(tr);
+    });
+    
+    content.appendChild(table);
+    
+    // Показываем модальное окно
+    const modal = new bootstrap.Modal(document.getElementById('recordDetailsModal'));
+    modal.show();
+}
+
+// Вспомогательные функции
+function getReportIcon(reportType) {
+    const icons = {
+        happy_workers: 'file-earmark-check',
+        vendhub: 'file-earmark-code',
+        fiscal_bills: 'receipt',
+        payme: 'credit-card',
+        click: 'credit-card-2-front',
+        uzum: 'credit-card-2-back',
+        bank_statement: 'bank'
+    };
+    return icons[reportType] || 'file-earmark';
+}
+
+function getFieldName(key) {
+    const fieldNames = {
+        file_name: 'Файл',
+        upload_date: 'Дата загрузки',
+        order_number: 'Номер заказа',
+        machine_code: 'Код автомата',
+        goods_name: 'Товар',
+        order_price: 'Цена',
+        creation_time: 'Время создания',
+        payment_status: 'Статус оплаты',
+        payment_type: 'Тип оплаты',
+        username: 'Пользователь',
+        fiscal_check_number: 'Номер чека',
+        amount: 'Сумма',
+        taxpayer_id: 'ИНН',
+        fiscal_time: 'Время фискализации',
+        transaction_id: 'ID транзакции',
+        masked_pan: 'Карта',
+        merchant_id: 'ID мерчанта'
+    };
+    return fieldNames[key] || key;
+}
+
+function formatCurrency(value) {
+    if (!value) return '0';
+    return new Intl.NumberFormat('ru-RU', {
+        style: 'currency',
+        currency: 'UZS',
+        minimumFractionDigits: 0
+    }).format(value);
+}
+
+function formatDateTime(value) {
+    if (!value) return '-';
+    try {
+        const date = new Date(value);
+        return date.toLocaleString('ru-RU');
+    } catch {
+        return value;
+    }
+}
+
+function showLoading(show) {
+    const indicator = document.getElementById('loading-indicator');
+    const table = document.getElementById('data-table');
+    
+    if (show) {
+        indicator.classList.remove('d-none');
+        table.style.opacity = '0.5';
+    } else {
+        indicator.classList.add('d-none');
+        table.style.opacity = '1';
+    }
+}
+
+function showNoData(show) {
+    const message = document.getElementById('no-data-message');
+    const table = document.getElementById('data-table');
+    
+    if (show) {
+        message.classList.remove('d-none');
+        table.classList.add('d-none');
+    } else {
+        message.classList.add('d-none');
+        table.classList.remove('d-none');
+    }
+}
+
+function showError(message) {
+    // Можно добавить toast уведомление
+    alert(message);
+}
+</script>
+{% endblock %}

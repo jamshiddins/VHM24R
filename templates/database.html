@@ -1,0 +1,613 @@
+{% extends "base.html" %}
+
+{% block title %}База данных - ODUS-RFM{% endblock %}
+
+{% block extra_css %}
+<style>
+    .database-controls {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 30px;
+        color: white;
+    }
+    
+    .filter-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stats-card {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        border-radius: 10px;
+        color: white;
+        padding: 20px;
+        margin-bottom: 20px;
+        transition: transform 0.3s ease;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .data-table {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .table th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+    }
+    
+    .table td {
+        border-color: #f8f9fa;
+        vertical-align: middle;
+    }
+    
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .status-ok { background: #d4edda; color: #155724; }
+    .status-error { background: #f8d7da; color: #721c24; }
+    .status-warning { background: #fff3cd; color: #856404; }
+    .status-info { background: #d1ecf1; color: #0c5460; }
+    
+    .loading-table {
+        text-align: center;
+        padding: 50px;
+        color: #6c757d;
+    }
+    
+    .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .export-btn {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        border: none;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+    }
+    
+    .export-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(240, 147, 251, 0.4);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Заголовок -->
+    <div class="database-controls">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 class="mb-2">
+                    <i class="fas fa-database me-3"></i>
+                    База данных заказов
+                </h2>
+                <p class="mb-0 opacity-75">
+                    Просмотр, фильтрация и анализ всех данных в системе
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <button class="btn btn-light btn-lg" onclick="refreshData()">
+                    <i class="fas fa-sync-alt me-2"></i>
+                    Обновить
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Статистика -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1 opacity-75">Всего заказов</h6>
+                        <h3 class="mb-0" id="totalOrders">-</h3>
+                    </div>
+                    <i class="fas fa-shopping-cart fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1 opacity-75">Успешно сопоставлено</h6>
+                        <h3 class="mb-0" id="successfulOrders">-</h3>
+                    </div>
+                    <i class="fas fa-check-circle fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1 opacity-75">Требуют внимания</h6>
+                        <h3 class="mb-0" id="errorOrders">-</h3>
+                    </div>
+                    <i class="fas fa-exclamation-triangle fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-1 opacity-75">Процент успеха</h6>
+                        <h3 class="mb-0" id="successRate">-</h3>
+                    </div>
+                    <i class="fas fa-percentage fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Фильтры -->
+    <div class="card filter-card mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-3">
+                <i class="fas fa-filter me-2 text-primary"></i>
+                Фильтры и настройки
+            </h5>
+            <div class="row">
+                <div class="col-md-3">
+                    <label class="form-label">Период</label>
+                    <select class="form-select" id="periodFilter">
+                        <option value="all">Все время</option>
+                        <option value="today">Сегодня</option>
+                        <option value="week">Последняя неделя</option>
+                        <option value="month">Последний месяц</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Автомат</label>
+                    <select class="form-select" id="machineFilter">
+                        <option value="all">Все автоматы</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Статус</label>
+                    <select class="form-select" id="statusFilter">
+                        <option value="all">Все статусы</option>
+                        <option value="OK">Успешно</option>
+                        <option value="NO_MATCH_IN_REPORT">Нет в отчете</option>
+                        <option value="NO_PAYMENT_FOUND">Нет платежа</option>
+                        <option value="FISCAL_MISSING">Нет фискального чека</option>
+                        <option value="UNPROCESSED">Не обработано</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <button class="btn btn-primary" onclick="applyFilters()">
+                            <i class="fas fa-search me-2"></i>
+                            Применить
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Таблица данных -->
+    <div class="data-table">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>№ заказа</th>
+                        <th>Автомат</th>
+                        <th>Время создания</th>
+                        <th>Сумма</th>
+                        <th>Тип оплаты</th>
+                        <th>Статус</th>
+                        <th>Товар</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersTableBody">
+                    <tr>
+                        <td colspan="8" class="loading-table">
+                            <div class="loading-spinner"></div>
+                            <p>Загрузка данных...</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Пагинация -->
+    <div class="d-flex justify-content-between align-items-center mt-4">
+        <div>
+            <span class="text-muted">
+                Показано <span id="showingCount">0</span> из <span id="totalCount">0</span> записей
+            </span>
+        </div>
+        <div>
+            <button class="export-btn me-2" onclick="exportData()">
+                <i class="fas fa-download me-2"></i>
+                Экспорт в Excel
+            </button>
+            <nav>
+                <ul class="pagination mb-0" id="pagination">
+                    <!-- Пагинация будет добавлена динамически -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно деталей заказа -->
+<div class="modal fade" id="orderDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Детали заказа
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="orderDetailsContent">
+                <!-- Содержимое будет загружено динамически -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Закрыть
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentData = [];
+let filteredData = [];
+let currentPage = 1;
+const itemsPerPage = 50;
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    loadMachines();
+    loadData();
+});
+
+// Загрузка списка автоматов для фильтра
+async function loadMachines() {
+    try {
+        const response = await fetch('/api/machines');
+        const machines = await response.json();
+        
+        const machineFilter = document.getElementById('machineFilter');
+        machines.forEach(machine => {
+            const option = document.createElement('option');
+            option.value = machine.machine_code;
+            option.textContent = machine.machine_code;
+            machineFilter.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error loading machines:', error);
+    }
+}
+
+// Загрузка данных
+async function loadData() {
+    try {
+        showLoading();
+        
+        const period = document.getElementById('periodFilter').value;
+        const machine = document.getElementById('machineFilter').value;
+        const status = document.getElementById('statusFilter').value;
+        
+        const params = new URLSearchParams({
+            period: period,
+            machine: machine,
+            status: status
+        });
+        
+        const response = await fetch(`/api/database/orders?${params}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            currentData = data.orders;
+            filteredData = [...currentData];
+            
+            updateStats(data.stats);
+            renderTable();
+            updatePagination();
+        } else {
+            showError('Ошибка загрузки данных: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error loading data:', error);
+        showError('Ошибка подключения к серверу');
+    }
+}
+
+// Обновление статистики
+function updateStats(stats) {
+    document.getElementById('totalOrders').textContent = stats.total || 0;
+    document.getElementById('successfulOrders').textContent = stats.OK || 0;
+    
+    const errorCount = (stats.NO_MATCH_IN_REPORT || 0) + 
+                      (stats.NO_PAYMENT_FOUND || 0) + 
+                      (stats.FISCAL_MISSING || 0) + 
+                      (stats.UNPROCESSED || 0);
+    
+    document.getElementById('errorOrders').textContent = errorCount;
+    
+    const successRate = stats.total > 0 ? 
+        Math.round((stats.OK || 0) / stats.total * 100) : 0;
+    document.getElementById('successRate').textContent = successRate + '%';
+}
+
+// Отображение таблицы
+function renderTable() {
+    const tbody = document.getElementById('ordersTableBody');
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const pageData = filteredData.slice(startIndex, endIndex);
+    
+    if (pageData.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center py-4">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Нет данных для отображения</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = pageData.map(order => `
+        <tr>
+            <td>
+                <strong>${order.order_number || '-'}</strong>
+            </td>
+            <td>
+                <span class="badge bg-secondary">${order.machine_code || '-'}</span>
+            </td>
+            <td>
+                ${order.creation_time ? new Date(order.creation_time).toLocaleString('ru-RU') : '-'}
+            </td>
+            <td>
+                <strong>${order.order_price ? order.order_price.toLocaleString('ru-RU') + ' сум' : '-'}</strong>
+            </td>
+            <td>
+                ${order.payment_type || '-'}
+            </td>
+            <td>
+                ${getStatusBadge(order.match_status)}
+            </td>
+            <td>
+                ${order.goods_name || '-'}
+            </td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary" onclick="showOrderDetails(${order.id})">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+    
+    // Обновляем счетчики
+    document.getElementById('showingCount').textContent = pageData.length;
+    document.getElementById('totalCount').textContent = filteredData.length;
+}
+
+// Получение бейджа статуса
+function getStatusBadge(status) {
+    const statusMap = {
+        'fully_matched': { text: 'Успешно', class: 'status-ok' },
+        'matched': { text: 'Сопоставлено', class: 'status-ok' },
+        'vendhub_only': { text: 'Нет в отчете', class: 'status-warning' },
+        'gateway_mismatch': { text: 'Нет платежа', class: 'status-error' },
+        'fiscal_mismatch': { text: 'Нет фискального чека', class: 'status-warning' },
+        'hw_only': { text: 'Не обработано', class: 'status-info' },
+        'unmatched': { text: 'Не сопоставлено', class: 'status-error' }
+    };
+    
+    const statusInfo = statusMap[status] || { text: status || 'Неизвестно', class: 'status-info' };
+    return `<span class="status-badge ${statusInfo.class}">${statusInfo.text}</span>`;
+}
+
+// Применение фильтров
+function applyFilters() {
+    loadData();
+}
+
+// Обновление данных
+function refreshData() {
+    loadData();
+}
+
+// Экспорт данных
+function exportData() {
+    const period = document.getElementById('periodFilter').value;
+    const machine = document.getElementById('machineFilter').value;
+    const status = document.getElementById('statusFilter').value;
+    
+    const params = new URLSearchParams({
+        period: period,
+        machine: machine,
+        status: status
+    });
+    
+    window.location.href = `/api/orders/export?${params}`;
+}
+
+// Показать детали заказа
+async function showOrderDetails(orderId) {
+    try {
+        const order = currentData.find(o => o.id === orderId);
+        if (!order) return;
+        
+        const content = `
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Основная информация</h6>
+                    <table class="table table-sm">
+                        <tr><td><strong>№ заказа:</strong></td><td>${order.order_number || '-'}</td></tr>
+                        <tr><td><strong>Автомат:</strong></td><td>${order.machine_code || '-'}</td></tr>
+                        <tr><td><strong>Время создания:</strong></td><td>${order.creation_time ? new Date(order.creation_time).toLocaleString('ru-RU') : '-'}</td></tr>
+                        <tr><td><strong>Сумма:</strong></td><td>${order.order_price ? order.order_price.toLocaleString('ru-RU') + ' сум' : '-'}</td></tr>
+                        <tr><td><strong>Товар:</strong></td><td>${order.goods_name || '-'}</td></tr>
+                        <tr><td><strong>Тип оплаты:</strong></td><td>${order.payment_type || '-'}</td></tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h6>Статус сопоставления</h6>
+                    <table class="table table-sm">
+                        <tr><td><strong>Статус:</strong></td><td>${getStatusBadge(order.match_status)}</td></tr>
+                        <tr><td><strong>Фискальный чек:</strong></td><td>${order.fiscal_check_number || 'Нет'}</td></tr>
+                        <tr><td><strong>ID транзакции:</strong></td><td>${order.transaction_id || 'Нет'}</td></tr>
+                        <tr><td><strong>Платежный шлюз:</strong></td><td>${order.payment_gateway || 'Нет'}</td></tr>
+                    </table>
+                </div>
+            </div>
+            ${order.mismatch_details ? `
+                <div class="mt-3">
+                    <h6>Детали расхождений</h6>
+                    <div class="alert alert-warning">
+                        <pre>${order.mismatch_details}</pre>
+                    </div>
+                </div>
+            ` : ''}
+        `;
+        
+        document.getElementById('orderDetailsContent').innerHTML = content;
+        
+        const modal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
+        modal.show();
+        
+    } catch (error) {
+        console.error('Error showing order details:', error);
+        showError('Ошибка загрузки деталей заказа');
+    }
+}
+
+// Обновление пагинации
+function updatePagination() {
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    const pagination = document.getElementById('pagination');
+    
+    if (totalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+    
+    let paginationHTML = '';
+    
+    // Предыдущая страница
+    if (currentPage > 1) {
+        paginationHTML += `
+            <li class="page-item">
+                <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+        `;
+    }
+    
+    // Номера страниц
+    const startPage = Math.max(1, currentPage - 2);
+    const endPage = Math.min(totalPages, currentPage + 2);
+    
+    for (let i = startPage; i <= endPage; i++) {
+        paginationHTML += `
+            <li class="page-item ${i === currentPage ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+            </li>
+        `;
+    }
+    
+    // Следующая страница
+    if (currentPage < totalPages) {
+        paginationHTML += `
+            <li class="page-item">
+                <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+        `;
+    }
+    
+    pagination.innerHTML = paginationHTML;
+}
+
+// Смена страницы
+function changePage(page) {
+    currentPage = page;
+    renderTable();
+    updatePagination();
+}
+
+// Показать загрузку
+function showLoading() {
+    const tbody = document.getElementById('ordersTableBody');
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="8" class="loading-table">
+                <div class="loading-spinner"></div>
+                <p>Загрузка данных...</p>
+            </td>
+        </tr>
+    `;
+}
+
+// Показать ошибку
+function showError(message) {
+    const tbody = document.getElementById('ordersTableBody');
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="8" class="text-center py-4">
+                <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                <p class="text-danger">${message}</p>
+                <button class="btn btn-primary" onclick="loadData()">
+                    <i class="fas fa-redo me-2"></i>Попробовать снова
+                </button>
+            </td>
+        </tr>
+    `;
+}
+</script>
+{% endblock %}

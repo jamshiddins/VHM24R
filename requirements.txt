@@ -53,6 +53,7 @@ cryptography==41.0.4
 
 # Cron job scheduling
 APScheduler==3.10.4
+schedule==1.2.0
 
 # JSON handling
 ujson==5.8.0

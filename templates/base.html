@@ -88,6 +88,9 @@
                             <li><a class="dropdown-item" href="{{ url_for('orders_list') }}">
                                 <i class="fas fa-chart-bar me-2 text-info"></i>Просмотр заказов
                             </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('database_viewer') }}">
+                                <i class="fas fa-database me-2 text-warning"></i>База данных
+                            </a></li>
                         </ul>
                     </li>
                     
@@ -121,7 +124,7 @@
                 <div class="flash-messages">
                     {% for category, message in messages %}
                         <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show fade-in-up" 
-                             role="alert" style="animation-delay: {{ loop.index0 * 0.1 }}s;">
+                             role="alert" style="--animation-delay: {{ loop.index0 * 0.1 }}s; animation-delay: var(--animation-delay);">
                             <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'info-circle' if category == 'info' else 'check-circle' }} me-2"></i>
                             {{ message }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>

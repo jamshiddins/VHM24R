@@ -1,0 +1,1206 @@
+{
+  "database_name": "VHM24R Orders Database",
+  "database_file": "orders.db",
+  "total_tables": 8,
+  "tables": {
+    "conflicts": {
+      "record_count": 0,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": true
+        },
+        {
+          "name": "conflict_type",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "order_id_1",
+          "type": "INTEGER",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "order_id_2",
+          "type": "INTEGER",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "conflict_data",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "resolution_status",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": "'pending'",
+          "primary_key": false
+        },
+        {
+          "name": "resolved_by",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "resolved_at",
+          "type": "TIMESTAMP",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "not_null": false,
+          "default_value": "CURRENT_TIMESTAMP",
+          "primary_key": false
+        }
+      ],
+      "create_sql": "CREATE TABLE conflicts (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    conflict_type TEXT,          -- number_mismatch/time_mismatch/amount_mismatch\n    order_id_1 INTEGER,\n    order_id_2 INTEGER,\n    conflict_data TEXT,          -- JSON с деталями конфликта\n    resolution_status TEXT DEFAULT 'pending', -- pending/resolved/ignored\n    resolved_by TEXT,\n    resolved_at TIMESTAMP,\n    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n)",
+      "sample_data": []
+    },
+    "file_metadata": {
+      "record_count": 5,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": true
+        },
+        {
+          "name": "filename",
+          "type": "TEXT",
+          "not_null": true,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "original_filename",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "file_type",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "file_path",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "remote_key",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "file_size",
+          "type": "INTEGER",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "file_hash",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "session_id",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "storage_status",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": "'local'",
+          "primary_key": false
+        },
+        {
+          "name": "processing_status",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": "'pending'",
+          "primary_key": false
+        },
+        {
+          "name": "upload_time",
+          "type": "TIMESTAMP",
+          "not_null": false,
+          "default_value": "CURRENT_TIMESTAMP",
+          "primary_key": false
+        },
+        {
+          "name": "processed_at",
+          "type": "TIMESTAMP",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "records_processed",
+          "type": "INTEGER",
+          "not_null": false,
+          "default_value": "0",
+          "primary_key": false
+        },
+        {
+          "name": "records_matched",
+          "type": "INTEGER",
+          "not_null": false,
+          "default_value": "0",
+          "primary_key": false
+        },
+        {
+          "name": "processing_errors",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        }
+      ],
+      "create_sql": "CREATE TABLE file_metadata (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    filename TEXT NOT NULL,\n    original_filename TEXT,\n    file_type TEXT,\n    file_path TEXT,\n    remote_key TEXT,\n    file_size INTEGER,\n    file_hash TEXT,\n    session_id TEXT,\n    storage_status TEXT DEFAULT 'local',\n    processing_status TEXT DEFAULT 'pending',\n    upload_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n    processed_at TIMESTAMP,\n    records_processed INTEGER DEFAULT 0,\n    records_matched INTEGER DEFAULT 0,\n    processing_errors TEXT        -- JSON с ошибками обработки\n)",
+      "sample_data": [
+        {
+          "id": "1",
+          "filename": "20250724_051533_unknown_fiscal_bills.xlsx",
+          "original_filename": "fiscal_bills.xlsx",
+          "file_type": "fiscal_bills",
+          "file_path": "uploads\\20250724_051533_unknown_fiscal_bills.xlsx",
+          "remote_key": null,
+          "file_size": "0",
+          "file_hash": "cd5a147bcc9d5dab5c13106cc7d49d51",
+          "session_id": "2e1a35ed-8559-473b-a7ad-337260045922",
+          "storage_status": "local_only",
+          "processing_status": "pending",
+          "upload_time": "2025-07-24 00:15:33",
+          "processed_at": null,
+          "records_processed": "0",
+          "records_matched": "0",
+          "processing_errors": null
+        },
+        {
+          "id": "2",
+          "filename": "20250724_051533_unknown_fiscal_bills.xlsx",
+          "original_filename": "fiscal_bills.xlsx",
+          "file_type": "fiscal_bills",
+          "file_path": "uploads\\20250724_051533_unknown_fiscal_bills.xlsx",
+          "remote_key": null,
+          "file_size": "39133",
+          "file_hash": "cd5a147bcc9d5dab5c13106cc7d49d51",
+          "session_id": "80bc90c4-dd92-4639-ab1b-de337f5848a5",
+          "storage_status": "local_only",
+          "processing_status": "pending",
+          "upload_time": "2025-07-24 00:15:33",
+          "processed_at": null,
+          "records_processed": "0",
+          "records_matched": "0",
+          "processing_errors": null
+        },
+        {
+          "id": "3",
+          "filename": "20250724_051627_unknown_HW.xlsx",
+          "original_filename": "HW.xlsx",
+          "file_type": "happy_workers",
+          "file_path": "uploads\\20250724_051627_unknown_HW.xlsx",
+          "remote_key": null,
+          "file_size": "848897",
+          "file_hash": "4d341b5d338726cd5cf35eef50bd554f",
+          "session_id": "9e1fd461-da1c-47e8-a30b-10476d40867e",
+          "storage_status": "local_only",
+          "processing_status": "pending",
+          "upload_time": "2025-07-24 00:16:27",
+          "processed_at": null,
+          "records_processed": "0",
+          "records_matched": "0",
+          "processing_errors": null
+        }
+      ]
+    },
+    "order_changes": {
+      "record_count": 0,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": true
+        },
+        {
+          "name": "order_id",
+          "type": "INTEGER",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "field_name",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "old_value",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "new_value",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "change_source",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "change_type",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "change_time",
+          "type": "TIMESTAMP",
+          "not_null": false,
+          "default_value": "CURRENT_TIMESTAMP",
+          "primary_key": false
+        },
+        {
+          "name": "change_details",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        }
+      ],
+      "create_sql": "CREATE TABLE order_changes (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    order_id INTEGER REFERENCES orders(id),\n    field_name TEXT,\n    old_value TEXT,\n    new_value TEXT,\n    change_source TEXT,          -- какой файл/процесс внес изменение\n    change_type TEXT,            -- create/update/merge/conflict\n    change_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n    change_details TEXT          -- JSON с дополнительной информацией\n)",
+      "sample_data": []
+    },
+    "orders": {
+      "record_count": 1194,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": true
+        },
+        {
+          "name": "uuid",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": "lower(hex(randomblob(16)))",
+          "primary_key": false
+        },
+        {
+          "name": "order_number",
+          "type": "TEXT",
+          "not_null": true,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "machine_code",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "creation_time",
+          "type": "TIMESTAMP",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "paying_time",
+          "type": "TIMESTAMP",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "brewing_time",
+          "type": "TIMESTAMP",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "delivery_time",
+          "type": "TIMESTAMP",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "refund_time",
+          "type": "TIMESTAMP",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "event_time",
+          "type": "TIMESTAMP",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "fiscal_time",
+          "type": "TIMESTAMP",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "gateway_time",
+          "type": "TIMESTAMP",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "order_price",
+          "type": "DECIMAL(10,2)",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "fiscal_amount",
+          "type": "DECIMAL(10,2)",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "gateway_amount",
+          "type": "DECIMAL(10,2)",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "bonus_amount",
+          "type": "DECIMAL(10,2)",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "cashback_amount",
+          "type": "DECIMAL(10,2)",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "goods_name",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "goods_id",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "taste_name",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "ikpu",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "barcode",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "marking",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "packaging",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "address",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "machine_category",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "order_type",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "order_resource",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "payment_type",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "payment_status",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "payment_gateway",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "fiscal_check_number",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "taxpayer_id",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "cash_register_id",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "shift_number",
+          "type": "INTEGER",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "receipt_type",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "transaction_id",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "payme_transaction_id",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "click_transaction_id",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "uzum_transaction_id",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "click_trans_id",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "card_number",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "merchant_id",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "terminal_id",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "service_id",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "shop_id",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "phone_number",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "username",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "gateway_username",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "brew_status",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "gateway_status",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "reason",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "match_status",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": "'unmatched'",
+          "primary_key": false
+        },
+        {
+          "name": "source",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "matched_sources",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "fiscal_matched",
+          "type": "BOOLEAN",
+          "not_null": false,
+          "default_value": "FALSE",
+          "primary_key": false
+        },
+        {
+          "name": "gateway_matched",
+          "type": "BOOLEAN",
+          "not_null": false,
+          "default_value": "FALSE",
+          "primary_key": false
+        },
+        {
+          "name": "mismatch_details",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "conflict_details",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "match_candidates",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "not_null": false,
+          "default_value": "CURRENT_TIMESTAMP",
+          "primary_key": false
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "not_null": false,
+          "default_value": "CURRENT_TIMESTAMP",
+          "primary_key": false
+        },
+        {
+          "name": "last_modified_by",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        }
+      ],
+      "create_sql": "CREATE TABLE orders (\n    -- Системные идентификаторы\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    uuid TEXT UNIQUE DEFAULT (lower(hex(randomblob(16)))),\n    \n    -- Ключевые поля для сопоставления\n    order_number TEXT NOT NULL,\n    machine_code TEXT,\n    \n    -- Временные метки (критически важные для сопоставления)\n    creation_time TIMESTAMP,\n    paying_time TIMESTAMP,\n    brewing_time TIMESTAMP,\n    delivery_time TIMESTAMP,\n    refund_time TIMESTAMP,\n    event_time TIMESTAMP,        -- из VendHub\n    fiscal_time TIMESTAMP,       -- из Fiscal Bills\n    gateway_time TIMESTAMP,      -- из Payment Gateways\n    \n    -- Финансовые данные\n    order_price DECIMAL(10,2),   -- основная цена заказа\n    fiscal_amount DECIMAL(10,2), -- сумма в фискальном чеке\n    gateway_amount DECIMAL(10,2),-- сумма в платежном шлюзе\n    bonus_amount DECIMAL(10,2),  -- начисленные бонусы\n    cashback_amount DECIMAL(10,2),-- кэшбэк (для Uzum)\n    \n    -- Информация о товаре\n    goods_name TEXT,\n    goods_id TEXT,\n    taste_name TEXT,\n    ikpu TEXT,\n    barcode TEXT,\n    marking TEXT,\n    packaging TEXT,\n    \n    -- Информация о местоположении\n    address TEXT,\n    machine_category TEXT,\n    \n    -- Платежная информация\n    order_type TEXT,\n    order_resource TEXT,         -- Cash payment/Custom payment/Test/VIP\n    payment_type TEXT,           -- Payme/Click/Uzum/Cash/Test/VIP\n    payment_status TEXT,\n    payment_gateway TEXT,        -- payme/click/uzum (определенный шлюз)\n    \n    -- Фискальная информация\n    fiscal_check_number TEXT,\n    taxpayer_id TEXT,\n    cash_register_id TEXT,\n    shift_number INTEGER,\n    receipt_type TEXT,\n    \n    -- Информация о транзакциях платежных шлюзов\n    transaction_id TEXT,         -- универсальный ID транзакции\n    payme_transaction_id TEXT,   -- специфичный для Payme\n    click_transaction_id TEXT,   -- специфичный для Click\n    uzum_transaction_id TEXT,    -- специфичный для Uzum\n    click_trans_id TEXT,         -- внутренний ID Click\n    \n    -- Платежные реквизиты\n    card_number TEXT,            -- маскированный номер карты\n    merchant_id TEXT,\n    terminal_id TEXT,            -- для Payme\n    service_id TEXT,             -- для Click\n    shop_id TEXT,                -- для Uzum\n    phone_number TEXT,           -- для Payme\n    \n    -- Пользовательская информация\n    username TEXT,\n    gateway_username TEXT,       -- username из платежного шлюза\n    \n    -- Статусы процессов\n    brew_status TEXT,\n    gateway_status TEXT,\n    reason TEXT,                 -- причина возврата/ошибки\n    \n    -- Статусы сопоставления\n    match_status TEXT DEFAULT 'unmatched',\n    source TEXT,                 -- откуда первично загружен заказ\n    matched_sources TEXT,        -- JSON массив сопоставленных источников\n    fiscal_matched BOOLEAN DEFAULT FALSE,\n    gateway_matched BOOLEAN DEFAULT FALSE,\n    \n    -- Детали несоответствий\n    mismatch_details TEXT,       -- JSON с деталями расхождений\n    conflict_details TEXT,       -- JSON с деталями конфликтов\n    match_candidates TEXT,       -- JSON массив ID кандидатов при неоднозначности\n    \n    -- Служебные поля\n    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n    last_modified_by TEXT,\n    \n    -- Индексы для оптимизации\n    CONSTRAINT unique_order UNIQUE(order_number, machine_code)\n)",
+      "sample_data": [
+        {
+          "id": "1196",
+          "uuid": "338303c58191822e9d24af1f72c3646d",
+          "order_number": "ff0000025520250701025853a7ca181f0000",
+          "machine_code": "a7ca181f0000",
+          "creation_time": "2025-06-30 23:59:06",
+          "paying_time": "2025-06-30 23:59:06",
+          "brewing_time": "2025-06-30 23:59:06",
+          "delivery_time": "2025-06-30 23:59:50",
+          "refund_time": null,
+          "event_time": null,
+          "fiscal_time": null,
+          "gateway_time": null,
+          "order_price": "15000",
+          "fiscal_amount": null,
+          "gateway_amount": null,
+          "bonus_amount": null,
+          "cashback_amount": null,
+          "goods_name": "Hot Chocolate",
+          "goods_id": null,
+          "taste_name": "Горячий шоколад",
+          "ikpu": null,
+          "barcode": null,
+          "marking": null,
+          "packaging": null,
+          "address": "кудрат первушка",
+          "machine_category": null,
+          "order_type": "Normal order",
+          "order_resource": "Cash payment",
+          "payment_type": "Cash",
+          "payment_status": "Paid",
+          "payment_gateway": null,
+          "fiscal_check_number": null,
+          "taxpayer_id": null,
+          "cash_register_id": null,
+          "shift_number": null,
+          "receipt_type": null,
+          "transaction_id": null,
+          "payme_transaction_id": null,
+          "click_transaction_id": null,
+          "uzum_transaction_id": null,
+          "click_trans_id": null,
+          "card_number": null,
+          "merchant_id": null,
+          "terminal_id": null,
+          "service_id": null,
+          "shop_id": null,
+          "phone_number": null,
+          "username": null,
+          "gateway_username": null,
+          "brew_status": "Delivered",
+          "gateway_status": null,
+          "reason": "nan",
+          "match_status": "hw_only",
+          "source": "happy_workers",
+          "matched_sources": "[\"happy_workers\"]",
+          "fiscal_matched": "0",
+          "gateway_matched": "0",
+          "mismatch_details": "Заказ найден только в Happy Workers",
+          "conflict_details": null,
+          "match_candidates": null,
+          "created_at": "2025-07-24 11:00:36",
+          "updated_at": "2025-07-24 11:00:48",
+          "last_modified_by": null
+        },
+        {
+          "id": "1198",
+          "uuid": "e5edfea1e3cf2f7cf559805c265c1739",
+          "order_number": "ff0000003c2025070102040072ac181f0000",
+          "machine_code": "72ac181f0000",
+          "creation_time": "2025-06-30 23:04:15",
+          "paying_time": "2025-06-30 23:04:15",
+          "brewing_time": "2025-06-30 23:04:15",
+          "delivery_time": "2025-06-30 23:05:54",
+          "refund_time": null,
+          "event_time": null,
+          "fiscal_time": null,
+          "gateway_time": null,
+          "order_price": "20000",
+          "fiscal_amount": null,
+          "gateway_amount": null,
+          "bonus_amount": null,
+          "cashback_amount": null,
+          "goods_name": "Cappuccino",
+          "goods_id": null,
+          "taste_name": "Капучино с сахаром",
+          "ikpu": null,
+          "barcode": null,
+          "marking": null,
+          "packaging": null,
+          "address": "ГУВД Остановка",
+          "machine_category": null,
+          "order_type": "Normal order",
+          "order_resource": "Cash payment",
+          "payment_type": "Cash",
+          "payment_status": "Paid",
+          "payment_gateway": null,
+          "fiscal_check_number": null,
+          "taxpayer_id": null,
+          "cash_register_id": null,
+          "shift_number": null,
+          "receipt_type": null,
+          "transaction_id": null,
+          "payme_transaction_id": null,
+          "click_transaction_id": null,
+          "uzum_transaction_id": null,
+          "click_trans_id": null,
+          "card_number": null,
+          "merchant_id": null,
+          "terminal_id": null,
+          "service_id": null,
+          "shop_id": null,
+          "phone_number": null,
+          "username": null,
+          "gateway_username": null,
+          "brew_status": "Delivered",
+          "gateway_status": null,
+          "reason": "nan",
+          "match_status": "hw_only",
+          "source": "happy_workers",
+          "matched_sources": "[\"happy_workers\"]",
+          "fiscal_matched": "0",
+          "gateway_matched": "0",
+          "mismatch_details": "Заказ найден только в Happy Workers",
+          "conflict_details": null,
+          "match_candidates": null,
+          "created_at": "2025-07-24 11:00:36",
+          "updated_at": "2025-07-24 11:00:48",
+          "last_modified_by": null
+        },
+        {
+          "id": "1199",
+          "uuid": "7461f9820efec961c748672a1e80cb31",
+          "order_number": "ff000002e22025070100444224a8181f0000",
+          "machine_code": "24a8181f0000",
+          "creation_time": "2025-06-30 21:44:45",
+          "paying_time": "2025-06-30 21:44:45",
+          "brewing_time": "2025-06-30 21:44:45",
+          "delivery_time": "2025-06-30 21:45:11",
+          "refund_time": null,
+          "event_time": null,
+          "fiscal_time": null,
+          "gateway_time": null,
+          "order_price": "10000",
+          "fiscal_amount": null,
+          "gateway_amount": null,
+          "bonus_amount": null,
+          "cashback_amount": null,
+          "goods_name": "Ice",
+          "goods_id": null,
+          "taste_name": "Лёд полный стакан",
+          "ikpu": null,
+          "barcode": null,
+          "marking": null,
+          "packaging": null,
+          "address": "Istanbul city",
+          "machine_category": null,
+          "order_type": "Normal order",
+          "order_resource": "Cash payment",
+          "payment_type": "Cash",
+          "payment_status": "Paid",
+          "payment_gateway": null,
+          "fiscal_check_number": null,
+          "taxpayer_id": null,
+          "cash_register_id": null,
+          "shift_number": null,
+          "receipt_type": null,
+          "transaction_id": null,
+          "payme_transaction_id": null,
+          "click_transaction_id": null,
+          "uzum_transaction_id": null,
+          "click_trans_id": null,
+          "card_number": null,
+          "merchant_id": null,
+          "terminal_id": null,
+          "service_id": null,
+          "shop_id": null,
+          "phone_number": null,
+          "username": null,
+          "gateway_username": null,
+          "brew_status": "Delivered",
+          "gateway_status": null,
+          "reason": "nan",
+          "match_status": "hw_only",
+          "source": "happy_workers",
+          "matched_sources": "[\"happy_workers\"]",
+          "fiscal_matched": "0",
+          "gateway_matched": "0",
+          "mismatch_details": "Заказ найден только в Happy Workers",
+          "conflict_details": null,
+          "match_candidates": null,
+          "created_at": "2025-07-24 11:00:36",
+          "updated_at": "2025-07-24 11:00:48",
+          "last_modified_by": null
+        }
+      ]
+    },
+    "processing_logs": {
+      "record_count": 0,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": true
+        },
+        {
+          "name": "session_id",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "log_level",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "message",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "details",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "not_null": false,
+          "default_value": "CURRENT_TIMESTAMP",
+          "primary_key": false
+        }
+      ],
+      "create_sql": "CREATE TABLE processing_logs (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    session_id TEXT,\n    log_level TEXT,\n    message TEXT,\n    details TEXT,\n    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n)",
+      "sample_data": []
+    },
+    "sqlite_sequence": {
+      "record_count": 4,
+      "columns": [
+        {
+          "name": "name",
+          "type": "",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "seq",
+          "type": "",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        }
+      ],
+      "create_sql": "CREATE TABLE sqlite_sequence(name,seq)",
+      "sample_data": [
+        {
+          "name": "system_config",
+          "seq": "145"
+        },
+        {
+          "name": "file_metadata",
+          "seq": "5"
+        },
+        {
+          "name": "unmatched_records",
+          "seq": "1272"
+        }
+      ]
+    },
+    "system_config": {
+      "record_count": 13,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": true
+        },
+        {
+          "name": "config_key",
+          "type": "TEXT",
+          "not_null": true,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "config_value",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "description",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP",
+          "not_null": false,
+          "default_value": "CURRENT_TIMESTAMP",
+          "primary_key": false
+        }
+      ],
+      "create_sql": "CREATE TABLE system_config (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    config_key TEXT UNIQUE NOT NULL,\n    config_value TEXT,\n    description TEXT,\n    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n)",
+      "sample_data": [
+        {
+          "id": "1",
+          "config_key": "time_tolerance_seconds",
+          "config_value": "60",
+          "description": "Допустимое отклонение времени в секундах",
+          "updated_at": "2025-07-23 23:58:28"
+        },
+        {
+          "id": "2",
+          "config_key": "amount_tolerance",
+          "config_value": "0.01",
+          "description": "Допустимое отклонение суммы",
+          "updated_at": "2025-07-23 23:58:28"
+        },
+        {
+          "id": "3",
+          "config_key": "hw_vendhub_time_window",
+          "config_value": "60",
+          "description": "Временное окно для сопоставления HW-VendHub (секунды)",
+          "updated_at": "2025-07-23 23:58:28"
+        }
+      ]
+    },
+    "unmatched_records": {
+      "record_count": 1272,
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": true
+        },
+        {
+          "name": "record_type",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "record_data",
+          "type": "TEXT",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "record_time",
+          "type": "TIMESTAMP",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "record_amount",
+          "type": "DECIMAL(10,2)",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "attempts",
+          "type": "INTEGER",
+          "not_null": false,
+          "default_value": "0",
+          "primary_key": false
+        },
+        {
+          "name": "last_attempt",
+          "type": "TIMESTAMP",
+          "not_null": false,
+          "default_value": null,
+          "primary_key": false
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP",
+          "not_null": false,
+          "default_value": "CURRENT_TIMESTAMP",
+          "primary_key": false
+        }
+      ],
+      "create_sql": "CREATE TABLE unmatched_records (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    record_type TEXT,            -- fiscal/payme/click/uzum\n    record_data TEXT,            -- JSON с полными данными записи\n    record_time TIMESTAMP,       -- время из записи для поиска\n    record_amount DECIMAL(10,2), -- сумма для поиска\n    attempts INTEGER DEFAULT 0,  -- количество попыток сопоставления\n    last_attempt TIMESTAMP,\n    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n)",
+      "sample_data": [
+        {
+          "id": "1",
+          "record_type": "fiscal",
+          "record_data": "{\"\\u0414\\u0430\\u0442\\u0430 \\u0438 \\u0432\\u0440\\u0435\\u043c\\u044f\": \"2025-06-16 07:06:42\", \"\\u041e\\u043f\\u0435\\u0440\\u0430\\u0446\\u0438\\u044f\": \"\\u041f\\u0440\\u043e\\u0434\\u0430\\u0436\\u0430\", \"\\u041d\\u043e\\u043c\\u0435\\u0440 \\u0447\\u0435\\u043a\\u0430\": 885, \"\\u041a\\u0430\\u0441\\u0441\\u0438\\u0440\": \"VendiHub Online\", \"\\u0422\\u043e\\u0440\\u0433\\u043e\\u0432\\u044b\\u0439 \\u043f\\u0443\\u043d\\u043a\\u0442\": \"\\u0421\\u0435\\u0440\\u0432\\u0435\\u0440\", \"\\u0424\\u0438\\u0441\\u043a\\u0430\\u043b\\u044c\\u043d\\u044b\\u0439 \\u043c\\u043e\\u0434\\u0443\\u043b\\u044c\": \"LG420230630322\", \"\\u0421\\u0443\\u043c\\u043c\\u0430 \\u043e\\u043f\\u0435\\u0440\\u0430\\u0446\\u0438\\u0438\": 15000, \"\\u041d\\u0430\\u043b\\u0438\\u0447\\u043d\\u044b\\u0435\": 15000, \"\\u041a\\u0430\\u0440\\u0442\\u0430\": 0, \"\\u041d\\u043e\\u043c\\u0435\\u0440 \\u0440\\u0435\\u0446\\u0435\\u043f\\u0442\\u0430\": NaN, \"\\u041f\\u043e\\u043a\\u0443\\u043f\\u0430\\u0442\\u0435\\u043b\\u044c\": NaN}",
+          "record_time": "2025-06-16 07:06:42",
+          "record_amount": "15000",
+          "attempts": "0",
+          "last_attempt": null,
+          "created_at": "2025-07-24 00:15:33"
+        },
+        {
+          "id": "2",
+          "record_type": "fiscal",
+          "record_data": "{\"\\u0414\\u0430\\u0442\\u0430 \\u0438 \\u0432\\u0440\\u0435\\u043c\\u044f\": \"2025-06-16 07:06:42\", \"\\u041e\\u043f\\u0435\\u0440\\u0430\\u0446\\u0438\\u044f\": \"\\u041f\\u0440\\u043e\\u0434\\u0430\\u0436\\u0430\", \"\\u041d\\u043e\\u043c\\u0435\\u0440 \\u0447\\u0435\\u043a\\u0430\": 885, \"\\u041a\\u0430\\u0441\\u0441\\u0438\\u0440\": \"VendiHub Online\", \"\\u0422\\u043e\\u0440\\u0433\\u043e\\u0432\\u044b\\u0439 \\u043f\\u0443\\u043d\\u043a\\u0442\": \"\\u0421\\u0435\\u0440\\u0432\\u0435\\u0440\", \"\\u0424\\u0438\\u0441\\u043a\\u0430\\u043b\\u044c\\u043d\\u044b\\u0439 \\u043c\\u043e\\u0434\\u0443\\u043b\\u044c\": \"LG420230630322\", \"\\u0421\\u0443\\u043c\\u043c\\u0430 \\u043e\\u043f\\u0435\\u0440\\u0430\\u0446\\u0438\\u0438\": 15000, \"\\u041d\\u0430\\u043b\\u0438\\u0447\\u043d\\u044b\\u0435\": 15000, \"\\u041a\\u0430\\u0440\\u0442\\u0430\": 0, \"\\u041d\\u043e\\u043c\\u0435\\u0440 \\u0440\\u0435\\u0446\\u0435\\u043f\\u0442\\u0430\": NaN, \"\\u041f\\u043e\\u043a\\u0443\\u043f\\u0430\\u0442\\u0435\\u043b\\u044c\": NaN}",
+          "record_time": "2025-06-16 07:06:42",
+          "record_amount": "15000",
+          "attempts": "0",
+          "last_attempt": null,
+          "created_at": "2025-07-24 00:15:33"
+        },
+        {
+          "id": "3",
+          "record_type": "fiscal",
+          "record_data": "{\"\\u0414\\u0430\\u0442\\u0430 \\u0438 \\u0432\\u0440\\u0435\\u043c\\u044f\": \"2025-06-16 07:09:15\", \"\\u041e\\u043f\\u0435\\u0440\\u0430\\u0446\\u0438\\u044f\": \"\\u041f\\u0440\\u043e\\u0434\\u0430\\u0436\\u0430\", \"\\u041d\\u043e\\u043c\\u0435\\u0440 \\u0447\\u0435\\u043a\\u0430\": 886, \"\\u041a\\u0430\\u0441\\u0441\\u0438\\u0440\": \"VendiHub Online\", \"\\u0422\\u043e\\u0440\\u0433\\u043e\\u0432\\u044b\\u0439 \\u043f\\u0443\\u043d\\u043a\\u0442\": \"\\u0421\\u0435\\u0440\\u0432\\u0435\\u0440\", \"\\u0424\\u0438\\u0441\\u043a\\u0430\\u043b\\u044c\\u043d\\u044b\\u0439 \\u043c\\u043e\\u0434\\u0443\\u043b\\u044c\": \"LG420230630322\", \"\\u0421\\u0443\\u043c\\u043c\\u0430 \\u043e\\u043f\\u0435\\u0440\\u0430\\u0446\\u0438\\u0438\": 20000, \"\\u041d\\u0430\\u043b\\u0438\\u0447\\u043d\\u044b\\u0435\": 20000, \"\\u041a\\u0430\\u0440\\u0442\\u0430\": 0, \"\\u041d\\u043e\\u043c\\u0435\\u0440 \\u0440\\u0435\\u0446\\u0435\\u043f\\u0442\\u0430\": NaN, \"\\u041f\\u043e\\u043a\\u0443\\u043f\\u0430\\u0442\\u0435\\u043b\\u044c\": NaN}",
+          "record_time": "2025-06-16 07:09:15",
+          "record_amount": "20000",
+          "attempts": "0",
+          "last_attempt": null,
+          "created_at": "2025-07-24 00:15:33"
+        }
+      ]
+    }
+  }
+}

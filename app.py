@@ -17,6 +17,7 @@ from file_detector_updated import AdvancedFileTypeDetector
 from storage import init_storage
 from telegram_bot import init_telegram
 from scheduler import init_scheduler
+from reports_api import reports_bp
 
 # Инициализация Flask приложения
 app = Flask(__name__)
@@ -77,6 +78,9 @@ def init_app():
 
 # Инициализация при запуске
 init_app()
+
+# Регистрация Blueprint для API отчетов
+app.register_blueprint(reports_bp)
 
 @app.route('/')
 def index():
@@ -436,6 +440,82 @@ def inject_app_info():
         'app_version': '1.0.0',
         'app_description': 'Интеллектуальная система сверки заказов'
     }
+
+@app.route('/database')
+def database_viewer():
+    """Страница просмотра базы данных"""
+    return render_template('database.html')
+
+@app.route('/reports')
+def reports_viewer():
+    """Страница системы отчетов"""
+    return render_template('reports_viewer.html')
+
+@app.route('/api/database/orders')
+def api_database_orders():
+    """API для получения данных заказов с фильтрацией"""
+    try:
+        filters = {}
+        
+        # Фильтр по периоду
+        period = request.args.get('period', 'all')
+        if period != 'all':
+            from datetime import datetime, timedelta
+            now = datetime.now()
+            
+            if period == 'today':
+                filters['date_from'] = now.strftime('%Y-%m-%d')
+                filters['date_to'] = now.strftime('%Y-%m-%d')
+            elif period == 'week':
+                week_ago = now - timedelta(days=7)
+                filters['date_from'] = week_ago.strftime('%Y-%m-%d')
+                filters['date_to'] = now.strftime('%Y-%m-%d')
+            elif period == 'month':
+                month_ago = now - timedelta(days=30)
+                filters['date_from'] = month_ago.strftime('%Y-%m-%d')
+                filters['date_to'] = now.strftime('%Y-%m-%d')
+        
+        # Фильтр по автомату
+        machine = request.args.get('machine', 'all')
+        if machine != 'all':
+            filters['machine_code'] = machine
+        
+        # Фильтр по статусу
+        status = request.args.get('status', 'all')
+        if status != 'all':
+            filters['error_type'] = status
+        
+        # Получаем данные
+        orders = db.get_orders_with_filters(filters, limit=1000)
+        stats = db.get_processing_stats()
+        
+        return jsonify({
+            'success': True,
+            'orders': orders,
+            'stats': stats
+        })
+    
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/machines')
+def api_machines():
+    """API для получения списка автоматов"""
+    try:
+        machines = db.execute_query("""
+            SELECT DISTINCT machine_code 
+            FROM orders 
+            WHERE machine_code IS NOT NULL 
+            ORDER BY machine_code
+        """)
+        
+        return jsonify([{'machine_code': m['machine_code']} for m in machines])
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     # Запуск в режиме разработки

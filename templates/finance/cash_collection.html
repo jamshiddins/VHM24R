@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+
+{% block title %}Инкассация наличных - ODUS-RFM v5.0{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="text-gradient">
+                <i class="fas fa-money-bill-wave me-2"></i>
+                Инкассация наличных
+            </h2>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCollectionModal">
+                <i class="fas fa-plus me-2"></i>Новая инкассация
+            </button>
+        </div>
+
+        <!-- Статус касс автоматов -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-cash-register me-2"></i>
+                            Состояние касс автоматов
+                            <span class="badge bg-warning ms-2">{{ machines_status|length }}</span>
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for machine in machines_status %}
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100 {% if machine.needs_collection %}border-warning{% endif %}">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="card-title text-light">{{ machine.machine_code }}</h6>
+                                            {% if machine.needs_collection %}
+                                                <span class="badge bg-warning">Требует инкассации</span>
+                                            {% else %}
+                                                <span class="badge bg-success">OK</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="mb-2">
+                                            <small class="text-muted">Остаток:</small>
+                                            <div class="h5 text-success">{{ "{:,.0f}"|format(machine.estimated_balance) }} сум</div>
+                                        </div>
+                                        <div class="mb-2">
+                                            <small class="text-muted">Транзакций: {{ machine.transactions_count }}</small>
+                                        </div>
+                                        <div class="mb-2">
+                                            <small class="text-muted">
+                                                Последняя инкассация: 
+                                                {% if machine.last_collection_date %}
+                                                    {{ machine.last_collection_date }} ({{ machine.days_since_collection }} дн. назад)
+                                                {% else %}
+                                                    Никогда
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                        {% if machine.needs_collection %}
+                                        <button class="btn btn-warning btn-sm w-100" onclick="collectCash('{{ machine.machine_code }}', {{ machine.estimated_balance }})">
+                                            <i class="fas fa-hand-holding-usd me-1"></i>Инкассировать
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- История инкассаций -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-history me-2"></i>
+                    История инкассаций
+                    <span class="badge bg-info ms-2">{{ collections|length }}</span>
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Дата</th>
+                                <th>Время</th>
+                                <th>Автомат</th>
+                                <th>Сумма</th>
+                                <th>Инкассатор</th>
+                                <th>Статус</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for collection in collections %}
+                            <tr>
+                                <td>{{ collection.id }}</td>
+                                <td>{{ collection.collection_date }}</td>
+                                <td>{{ collection.collection_time }}</td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ collection.machine_code }}</span>
+                                </td>
+                                <td>
+                                    <span class="text-success">{{ "{:,.0f}"|format(collection.amount_collected) }} сум</span>
+                                </td>
+                                <td>{{ collection.collector_name }}</td>
+                                <td>
+                                    {% if collection.status == 'completed' %}
+                                        <span class="badge bg-success">Завершено</span>
+                                    {% elif collection.status == 'pending' %}
+                                        <span class="badge bg-warning">В процессе</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Ошибка</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-info" onclick="viewCollection({{ collection.id }})">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        {% if collection.status == 'pending' %}
+                                        <button class="btn btn-outline-success" onclick="completeCollection({{ collection.id }})">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center text-muted">
+                                    <i class="fas fa-money-bill-wave fa-2x mb-2"></i>
+                                    <br>Инкассации не найдены
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно новой инкассации -->
+<div class="modal fade" id="addCollectionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus me-2"></i>
+                    Новая инкассация
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addCollectionForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Код автомата</label>
+                        <select class="form-select" name="machine_code" id="machineSelect" required>
+                            <option value="">Выберите автомат</option>
+                            {% for machine in machines_status %}
+                            <option value="{{ machine.machine_code }}" data-balance="{{ machine.estimated_balance }}">
+                                {{ machine.machine_code }} ({{ "{:,.0f}"|format(machine.estimated_balance) }} сум)
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Дата инкассации</label>
+                        <input type="date" class="form-control" name="collection_date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Время инкассации</label>
+                        <input type="time" class="form-control" name="collection_time" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Сумма инкассации (сум)</label>
+                        <input type="number" class="form-control" name="amount_collected" id="amountInput" step="1" required>
+                        <div class="form-text">
+                            <span id="estimatedAmount"></span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Имя инкассатора</label>
+                        <input type="text" class="form-control" name="collector_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Примечания</label>
+                        <textarea class="form-control" name="notes" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Сохранить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Установка текущей даты и времени
+document.addEventListener('DOMContentLoaded', function() {
+    const now = new Date();
+    const dateInput = document.querySelector('input[name="collection_date"]');
+    const timeInput = document.querySelector('input[name="collection_time"]');
+    
+    dateInput.value = now.toISOString().split('T')[0];
+    timeInput.value = now.toTimeString().slice(0, 5);
+});
+
+// Обновление предполагаемой суммы при выборе автомата
+document.getElementById('machineSelect').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const balance = selectedOption.getAttribute('data-balance');
+    const estimatedSpan = document.getElementById('estimatedAmount');
+    const amountInput = document.getElementById('amountInput');
+    
+    if (balance) {
+        estimatedSpan.textContent = `Предполагаемый остаток: ${parseFloat(balance).toLocaleString()} сум`;
+        amountInput.value = Math.round(parseFloat(balance));
+    } else {
+        estimatedSpan.textContent = '';
+        amountInput.value = '';
+    }
+});
+
+// Отправка формы инкассации
+document.getElementById('addCollectionForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData.entries());
+    
+    fetch('/finance/cash-collection', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Ошибка при регистрации инкассации: ' + (data.error || 'Неизвестная ошибка'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Произошла ошибка при отправке данных');
+    });
+});
+
+// Быстрая инкассация из карточки автомата
+function collectCash(machineCode, estimatedBalance) {
+    document.getElementById('machineSelect').value = machineCode;
+    document.getElementById('amountInput').value = Math.round(estimatedBalance);
+    document.getElementById('estimatedAmount').textContent = `Предполагаемый остаток: ${estimatedBalance.toLocaleString()} сум`;
+    
+    const modal = new bootstrap.Modal(document.getElementById('addCollectionModal'));
+    modal.show();
+}
+
+// Просмотр деталей инкассации
+function viewCollection(id) {
+    // Функция просмотра деталей инкассации
+    alert('Функция просмотра деталей в разработке');
+}
+
+// Завершение инкассации
+function completeCollection(id) {
+    if (confirm('Подтвердить завершение инкассации?')) {
+        fetch(`/finance/cash-collection/${id}/complete`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Ошибка при завершении инкассации');
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,383 @@
+{% extends "base.html" %}
+
+{% block title %}Дашборд - ODUS-RFM v5.0{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="display-5">
+                    <i class="fas fa-chart-line text-primary me-3"></i>
+                    Аналитический дашборд
+                </h1>
+                <p class="text-muted">Общая статистика по всем модулям системы</p>
+            </div>
+            <div>
+                <button class="btn btn-outline-primary" onclick="location.reload()">
+                    <i class="fas fa-sync-alt me-2"></i>Обновить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Общие метрики -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ order_stats.total or 0 }}</h4>
+                        <p class="card-text">Всего заказов</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-shopping-cart fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ recipe_stats.products_count or 0 }}</h4>
+                        <p class="card-text">Продуктов</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-coffee fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ finance_stats.bank_transactions or 0 }}</h4>
+                        <p class="card-text">Банк. транзакций</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-university fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ finance_stats.machines_need_collection or 0 }}</h4>
+                        <p class="card-text">Требуют инкассации</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модуль сверки заказов -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-file-import me-2"></i>
+                    Модуль сверки заказов
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <!-- Простая визуализация без Chart.js -->
+                        <div class="row text-center">
+                            <div class="col-3">
+                                <div class="card border-success">
+                                    <div class="card-body">
+                                        <h3 class="text-success">{{ order_stats.matched or 0 }}</h3>
+                                        <small class="text-muted">Сопоставлено</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="card border-warning">
+                                    <div class="card-body">
+                                        <h3 class="text-warning">{{ order_stats.time_mismatch or 0 }}</h3>
+                                        <small class="text-muted">Время</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="card border-warning">
+                                    <div class="card-body">
+                                        <h3 class="text-warning">{{ order_stats.price_mismatch or 0 }}</h3>
+                                        <small class="text-muted">Цена</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="card border-danger">
+                                    <div class="card-body">
+                                        <h3 class="text-danger">{{ order_stats.unmatched or 0 }}</h3>
+                                        <small class="text-muted">Не сопоставлено</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Статистика сопоставления</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <a href="/api/orders/details?filter=matched" class="text-decoration-none">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    Сопоставлено: <strong>{{ order_stats.matched or 0 }}</strong>
+                                </a>
+                            </li>
+                            <li class="mb-2">
+                                <a href="/api/orders/details?filter=time_mismatch" class="text-decoration-none">
+                                    <i class="fas fa-clock text-warning me-2"></i>
+                                    Расхождение по времени: <strong>{{ order_stats.time_mismatch or 0 }}</strong>
+                                </a>
+                            </li>
+                            <li class="mb-2">
+                                <a href="/api/orders/details?filter=price_mismatch" class="text-decoration-none">
+                                    <i class="fas fa-dollar-sign text-warning me-2"></i>
+                                    Расхождение по цене: <strong>{{ order_stats.price_mismatch or 0 }}</strong>
+                                </a>
+                            </li>
+                            <li class="mb-2">
+                                <a href="/api/orders/details?filter=unmatched" class="text-decoration-none">
+                                    <i class="fas fa-times-circle text-danger me-2"></i>
+                                    Не сопоставлено: <strong>{{ order_stats.unmatched or 0 }}</strong>
+                                </a>
+                            </li>
+                        </ul>
+                        
+                        <div class="mt-3">
+                            <a href="{{ url_for('index') }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-upload me-2"></i>Загрузить файлы
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модуль рецептур и финансов -->
+<div class="row mb-4">
+    <!-- Рецептура -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-utensils me-2"></i>
+                    Модуль рецептур
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="border-end">
+                            <h4 class="text-success">{{ recipe_stats.products_count or 0 }}</h4>
+                            <small class="text-muted">Продуктов</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="border-end">
+                            <h4 class="text-info">{{ recipe_stats.ingredients_count or 0 }}</h4>
+                            <small class="text-muted">Ингредиентов</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <h4 class="text-primary">{{ recipe_stats.recipes_count or 0 }}</h4>
+                        <small class="text-muted">Рецептов</small>
+                    </div>
+                </div>
+                
+                {% if recipe_stats.low_stock_ingredients and recipe_stats.low_stock_ingredients > 0 %}
+                <div class="alert alert-warning mt-3" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>{{ recipe_stats.low_stock_ingredients }}</strong> ингредиентов с низким остатком
+                </div>
+                {% endif %}
+                
+                <div class="mt-3">
+                    <a href="{{ url_for('recipes_index') }}" class="btn btn-success btn-sm me-2">
+                        <i class="fas fa-utensils me-2"></i>Управление
+                    </a>
+                    <a href="{{ url_for('ingredients_list') }}" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-seedling me-2"></i>Остатки
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Финансы -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-money-bill-wave me-2"></i>
+                    Модуль финансов
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="border-end">
+                            <h4 class="text-info">{{ finance_stats.bank_transactions or 0 }}</h4>
+                            <small class="text-muted">Банк. операций</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="border-end">
+                            <h4 class="text-success">{{ finance_stats.cash_collections or 0 }}</h4>
+                            <small class="text-muted">Инкассаций</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <h4 class="text-warning">{{ finance_stats.machines_need_collection or 0 }}</h4>
+                        <small class="text-muted">Требуют сбора</small>
+                    </div>
+                </div>
+                
+                {% if finance_stats.machines_need_collection and finance_stats.machines_need_collection > 0 %}
+                <div class="alert alert-warning mt-3" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>{{ finance_stats.machines_need_collection }}</strong> автоматов требуют инкассации
+                </div>
+                {% endif %}
+                
+                <div class="mt-3">
+                    <a href="{{ url_for('finance_index') }}" class="btn btn-info btn-sm me-2">
+                        <i class="fas fa-money-bill-wave me-2"></i>Управление
+                    </a>
+                    <a href="{{ url_for('cash_collection') }}" class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-hand-holding-usd me-2"></i>Инкассация
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Быстрые действия -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bolt me-2"></i>
+                    Быстрые действия
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="d-grid">
+                            <a href="{{ url_for('index') }}" class="btn btn-primary">
+                                <i class="fas fa-upload me-2"></i>
+                                Загрузить файлы
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-grid">
+                            <a href="{{ url_for('daily_report') }}" class="btn btn-success">
+                                <i class="fas fa-calendar-day me-2"></i>
+                                Дневной отчет
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-grid">
+                            <a href="{{ url_for('finance_reconciliation') }}" class="btn btn-info">
+                                <i class="fas fa-balance-scale me-2"></i>
+                                Сверка платежей
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-grid">
+                            <a href="/api/orders/export?format=csv" class="btn btn-outline-secondary">
+                                <i class="fas fa-download me-2"></i>
+                                Экспорт данных
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Последние обновления -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-clock me-2"></i>
+                    Последние обновления
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Заказы</h6>
+                        <p class="mb-1">Последняя загрузка: <strong>{{ last_upload_time or 'Нет данных' }}</strong></p>
+                        <p class="mb-0 text-muted small">Обработано файлов: {{ files_processed or 0 }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Рецептура</h6>
+                        <p class="mb-1">Последняя инвентаризация: <strong>{{ last_inventory_date or 'Нет данных' }}</strong></p>
+                        <p class="mb-0 text-muted small">Активных рецептов: {{ active_recipes or 0 }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-muted">Финансы</h6>
+                        <p class="mb-1">Последняя инкассация: <strong>{{ last_collection_date or 'Нет данных' }}</strong></p>
+                        <p class="mb-0 text-muted small">Сумма в кассах: {{ total_cash_amount or 0 }} сум</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Простое автообновление страницы каждые 60 секунд
+setTimeout(function() {
+    location.reload();
+}, 60000);
+
+// Добавляем анимацию для карточек
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+{% endblock %}

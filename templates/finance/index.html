@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block title %}Финансовый модуль - ODUS-RFM v5.0{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center mb-4">
+                <h1 class="display-4">
+                    <i class="fas fa-money-bill-wave text-info me-3"></i>
+                    Модуль финансовой сверки
+                </h1>
+                <p class="lead">Сверка платежных систем, инкассация и банковские операции</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Быстрая статистика -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-university fa-2x mb-2"></i>
+                    <h4>{{ bank_transactions or 0 }}</h4>
+                    <p class="mb-0">Банк. операций</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-hand-holding-usd fa-2x mb-2"></i>
+                    <h4>{{ cash_collections or 0 }}</h4>
+                    <p class="mb-0">Инкассаций</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                    <h4>{{ machines_need_collection or 0 }}</h4>
+                    <p class="mb-0">Требуют сбора</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-balance-scale fa-2x mb-2"></i>
+                    <h4>{{ reconciled_today or 0 }}</h4>
+                    <p class="mb-0">Сверено сегодня</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Основные разделы -->
+    <div class="row mb-4">
+        <!-- Банковские операции -->
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-file-import me-2"></i>
+                        Банковские выписки
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Импорт и обработка банковских выписок</p>
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('import_bank_statement') }}" class="btn btn-info">
+                            <i class="fas fa-upload me-2"></i>Импорт
+                        </a>
+                        <button class="btn btn-outline-info" onclick="showComingSoon('История банковских операций')">
+                            <i class="fas fa-history me-2"></i>История
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Сверка платежных систем -->
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-balance-scale me-2"></i>
+                        Сверка платежей
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Автоматическая сверка Payme, Click, Uzum</p>
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('finance_reconciliation') }}" class="btn btn-primary">
+                            <i class="fas fa-play me-2"></i>Сверить
+                        </a>
+                        <button class="btn btn-outline-primary" onclick="showComingSoon('Отчет по сверке')">
+                            <i class="fas fa-chart-line me-2"></i>Отчет
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Инкассация -->
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-hand-holding-usd me-2"></i>
+                        Инкассация наличных
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Регистрация сбора наличных из автоматов</p>
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('cash_collection') }}" class="btn btn-success">
+                            <i class="fas fa-plus me-2"></i>Зарегистрировать
+                        </a>
+                        <button class="btn btn-outline-success" onclick="showComingSoon('История инкассаций')">
+                            <i class="fas fa-history me-2"></i>История
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Кассовые остатки -->
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-cash-register me-2"></i>
+                        Кассовые остатки
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Контроль остатков наличных в автоматах</p>
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('cash_balance') }}" class="btn btn-warning">
+                            <i class="fas fa-eye me-2"></i>Просмотр
+                        </a>
+                        <button class="btn btn-outline-warning" onclick="showComingSoon('Настройки лимитов')">
+                            <i class="fas fa-cog me-2"></i>Настройки
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Быстрые действия -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt me-2"></i>
+                        Быстрые действия
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <button class="btn btn-info" onclick="performQuickReconciliation()">
+                                    <i class="fas fa-magic me-2"></i>
+                                    Быстрая сверка
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <button class="btn btn-success" onclick="showComingSoon('Экспорт финансовых данных')">
+                                    <i class="fas fa-file-export me-2"></i>
+                                    Экспорт данных
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <a href="{{ url_for('financial_report') }}" class="btn btn-primary">
+                                    <i class="fas fa-chart-pie me-2"></i>
+                                    Финансовый отчет
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>
+                                    К дашборду
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно "В разработке" -->
+<div class="modal fade" id="comingSoonModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">В разработке</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <i class="fas fa-tools fa-3x text-muted mb-3"></i>
+                    <p class="mb-0">Функция "<span id="featureName"></span>" находится в разработке</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showComingSoon(featureName) {
+    document.getElementById('featureName').textContent = featureName;
+    const modal = new bootstrap.Modal(document.getElementById('comingSoonModal'));
+    modal.show();
+}
+
+function performQuickReconciliation() {
+    const today = new Date().toISOString().split('T')[0];
+    window.location.href = `{{ url_for('finance_reconciliation') }}?start_date=${today}&end_date=${today}`;
+}
+
+// Анимация карточек при загрузке
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+{% endblock %}

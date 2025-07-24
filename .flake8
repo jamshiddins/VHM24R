@@ -1,0 +1,52 @@
+[flake8]
+max-line-length = 120
+exclude = 
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    env,
+    .env,
+    node_modules,
+    uploads,
+    static/uploads,
+    .vscode,
+    *.pyc,
+    *.pyo,
+    *.pyd,
+    .Python,
+    build,
+    develop-eggs,
+    dist,
+    downloads,
+    eggs,
+    .eggs,
+    lib,
+    lib64,
+    parts,
+    sdist,
+    var,
+    wheels,
+    *.egg-info,
+    .installed.cfg,
+    *.egg
+
+ignore = 
+    E203,
+    E501,
+    W503,
+    F401,
+    E402,
+    W291,
+    W293,
+    E302,
+    E305,
+    E128,
+    C901,
+    F841
+
+per-file-ignores =
+    __init__.py:F401
+    init_db.py:E402
+
+max-complexity = 15

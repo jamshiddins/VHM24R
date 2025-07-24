@@ -1,0 +1,509 @@
+<!-- Универсальные модальные окна для системы VHM24R -->
+
+<!-- Модальное окно подтверждения удаления -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle text-warning mr-2"></i>
+                    Подтверждение удаления
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="deleteConfirmText">Вы уверены, что хотите удалить этот элемент?</p>
+                <p class="text-muted small">Это действие нельзя будет отменить.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash mr-2"></i>
+                    Удалить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно загрузки файлов -->
+<div class="modal fade" id="uploadModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-upload mr-2"></i>
+                    Загрузка файлов
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-content">
+                        <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                        <h4>Перетащите файлы сюда</h4>
+                        <p class="text-muted">или нажмите для выбора файлов</p>
+                        <input type="file" id="fileInput" multiple accept=".xlsx,.xls,.csv" style="display: none;">
+                        <button type="button" class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                            <i class="fas fa-folder-open mr-2"></i>
+                            Выбрать файлы
+                        </button>
+                    </div>
+                </div>
+                <div id="fileList" class="mt-3" style="display: none;">
+                    <h6>Выбранные файлы:</h6>
+                    <div id="selectedFiles"></div>
+                </div>
+                <div id="uploadProgress" class="mt-3" style="display: none;">
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <small class="text-muted" id="uploadStatus">Загрузка...</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" id="startUploadBtn" disabled>
+                    <i class="fas fa-upload mr-2"></i>
+                    Загрузить
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно просмотра деталей -->
+<div class="modal fade" id="detailsModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailsModalTitle">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Детали
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="detailsModalBody">
+                <!-- Содержимое будет загружено динамически -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно настроек -->
+<div class="modal fade" id="settingsModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-cog mr-2"></i>
+                    Настройки системы
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="settingsForm">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-clock mr-2"></i>Временные настройки</h6>
+                            <div class="form-group">
+                                <label for="timeToleranceMinutes">Допуск по времени (минуты)</label>
+                                <input type="number" class="form-control" id="timeToleranceMinutes" name="time_tolerance" value="10" min="1" max="60">
+                                <small class="form-text text-muted">Допустимое отклонение времени при сверке</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="amountToleranceSum">Допуск по сумме (сум)</label>
+                                <input type="number" class="form-control" id="amountToleranceSum" name="amount_tolerance" value="1" min="0" step="0.01">
+                                <small class="form-text text-muted">Допустимое отклонение суммы при сверке</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-bell mr-2"></i>Уведомления</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="enableTelegramNotifications" name="telegram_notifications" checked>
+                                <label class="form-check-label" for="enableTelegramNotifications">
+                                    Telegram уведомления
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="enableEmailNotifications" name="email_notifications">
+                                <label class="form-check-label" for="enableEmailNotifications">
+                                    Email уведомления
+                                </label>
+                            </div>
+                            <div class="form-group mt-3">
+                                <label for="notificationThreshold">Порог критических ошибок (%)</label>
+                                <input type="number" class="form-control" id="notificationThreshold" name="error_threshold" value="10" min="1" max="100">
+                                <small class="form-text text-muted">При превышении этого порога отправляются уведомления</small>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-database mr-2"></i>База данных</h6>
+                            <div class="form-group">
+                                <label for="dataRetentionDays">Хранение данных (дни)</label>
+                                <input type="number" class="form-control" id="dataRetentionDays" name="data_retention" value="90" min="30" max="365">
+                                <small class="form-text text-muted">Количество дней хранения обработанных данных</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-sync mr-2"></i>Автоматизация</h6>
+                            <div class="form-group">
+                                <label for="autoProcessInterval">Интервал автообработки (часы)</label>
+                                <select class="form-control" id="autoProcessInterval" name="auto_process_interval">
+                                    <option value="1">Каждый час</option>
+                                    <option value="6">Каждые 6 часов</option>
+                                    <option value="12">Каждые 12 часов</option>
+                                    <option value="24" selected>Каждые 24 часа</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-2"></i>
+                        Сохранить настройки
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно экспорта данных -->
+<div class="modal fade" id="exportModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-download mr-2"></i>
+                    Экспорт данных
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="exportForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="exportFormat">Формат файла</label>
+                        <select class="form-control" id="exportFormat" name="format">
+                            <option value="xlsx">Excel (.xlsx)</option>
+                            <option value="csv">CSV (.csv)</option>
+                            <option value="json">JSON (.json)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="exportDateFrom">Дата с</label>
+                        <input type="date" class="form-control" id="exportDateFrom" name="date_from">
+                    </div>
+                    <div class="form-group">
+                        <label for="exportDateTo">Дата по</label>
+                        <input type="date" class="form-control" id="exportDateTo" name="date_to">
+                    </div>
+                    <div class="form-group">
+                        <label>Включить в экспорт</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="includeOrders" name="include_orders" checked>
+                            <label class="form-check-label" for="includeOrders">Заказы</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="includePayments" name="include_payments" checked>
+                            <label class="form-check-label" for="includePayments">Платежи</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="includeErrors" name="include_errors" checked>
+                            <label class="form-check-label" for="includeErrors">Ошибки</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-download mr-2"></i>
+                        Экспортировать
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.upload-area {
+    border: 2px dashed #007bff;
+    border-radius: 10px;
+    padding: 40px;
+    text-align: center;
+    background-color: #f8f9fa;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.upload-area:hover {
+    border-color: #0056b3;
+    background-color: #e3f2fd;
+}
+
+.upload-area.dragover {
+    border-color: #28a745;
+    background-color: #d4edda;
+}
+
+.file-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    margin: 4px 0;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+}
+
+.file-item .file-info {
+    display: flex;
+    align-items: center;
+}
+
+.file-item .file-size {
+    color: #6c757d;
+    font-size: 0.875rem;
+    margin-left: 10px;
+}
+
+.file-item .remove-file {
+    color: #dc3545;
+    cursor: pointer;
+    padding: 2px 6px;
+}
+
+.file-item .remove-file:hover {
+    background-color: #dc3545;
+    color: white;
+    border-radius: 3px;
+}
+</style>
+
+<script>
+// Универсальные функции для модальных окон
+
+// Функция подтверждения удаления
+function showDeleteConfirmation(message, callback) {
+    $('#deleteConfirmText').text(message);
+    $('#confirmDeleteModal').modal('show');
+    
+    $('#confirmDeleteBtn').off('click').on('click', function() {
+        $('#confirmDeleteModal').modal('hide');
+        if (typeof callback === 'function') {
+            callback();
+        }
+    });
+}
+
+// Функция показа деталей
+function showDetails(title, content) {
+    $('#detailsModalTitle').html('<i class="fas fa-info-circle mr-2"></i>' + title);
+    $('#detailsModalBody').html(content);
+    $('#detailsModal').modal('show');
+}
+
+// Функция загрузки файлов
+function initFileUpload() {
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const fileList = document.getElementById('fileList');
+    const selectedFiles = document.getElementById('selectedFiles');
+    const startUploadBtn = document.getElementById('startUploadBtn');
+    let files = [];
+
+    // Drag and drop
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        handleFiles(e.dataTransfer.files);
+    });
+
+    uploadArea.addEventListener('click', function() {
+        fileInput.click();
+    });
+
+    fileInput.addEventListener('change', function() {
+        handleFiles(this.files);
+    });
+
+    function handleFiles(fileList) {
+        files = Array.from(fileList);
+        displayFiles();
+        startUploadBtn.disabled = files.length === 0;
+    }
+
+    function displayFiles() {
+        if (files.length === 0) {
+            document.getElementById('fileList').style.display = 'none';
+            return;
+        }
+
+        document.getElementById('fileList').style.display = 'block';
+        selectedFiles.innerHTML = '';
+
+        files.forEach((file, index) => {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item';
+            fileItem.innerHTML = `
+                <div class="file-info">
+                    <i class="fas fa-file-excel text-success mr-2"></i>
+                    <span>${file.name}</span>
+                    <span class="file-size">(${formatFileSize(file.size)})</span>
+                </div>
+                <span class="remove-file" onclick="removeFile(${index})">
+                    <i class="fas fa-times"></i>
+                </span>
+            `;
+            selectedFiles.appendChild(fileItem);
+        });
+    }
+
+    window.removeFile = function(index) {
+        files.splice(index, 1);
+        displayFiles();
+        startUploadBtn.disabled = files.length === 0;
+    };
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Обработка загрузки
+    startUploadBtn.addEventListener('click', function() {
+        if (files.length === 0) return;
+
+        const formData = new FormData();
+        files.forEach(file => {
+            formData.append('files', file);
+        });
+
+        const progressBar = document.querySelector('#uploadProgress .progress-bar');
+        const uploadStatus = document.getElementById('uploadStatus');
+        
+        document.getElementById('uploadProgress').style.display = 'block';
+        startUploadBtn.disabled = true;
+
+        $.ajax({
+            url: '/api/upload',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            xhr: function() {
+                const xhr = new window.XMLHttpRequest();
+                xhr.upload.addEventListener('progress', function(e) {
+                    if (e.lengthComputable) {
+                        const percentComplete = (e.loaded / e.total) * 100;
+                        progressBar.style.width = percentComplete + '%';
+                        uploadStatus.textContent = `Загружено ${Math.round(percentComplete)}%`;
+                    }
+                });
+                return xhr;
+            },
+            success: function(response) {
+                uploadStatus.textContent = 'Загрузка завершена успешно!';
+                progressBar.classList.add('bg-success');
+                
+                setTimeout(function() {
+                    $('#uploadModal').modal('hide');
+                    location.reload(); // Обновить страницу для отображения новых данных
+                }, 2000);
+            },
+            error: function(xhr) {
+                uploadStatus.textContent = 'Ошибка при загрузке файлов';
+                progressBar.classList.add('bg-danger');
+                startUploadBtn.disabled = false;
+            }
+        });
+    });
+}
+
+// Инициализация при загрузке страницы
+$(document).ready(function() {
+    initFileUpload();
+    
+    // Обработка формы настроек
+    $('#settingsForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        $.ajax({
+            url: '/api/settings',
+            method: 'POST',
+            data: $(this).serialize(),
+            success: function(response) {
+                $('#settingsModal').modal('hide');
+                showAlert('success', 'Настройки успешно сохранены');
+            },
+            error: function(xhr) {
+                showAlert('danger', 'Ошибка при сохранении настроек');
+            }
+        });
+    });
+    
+    // Обработка формы экспорта
+    $('#exportForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = $(this).serialize();
+        window.open('/api/export?' + formData, '_blank');
+        $('#exportModal').modal('hide');
+    });
+});
+
+// Функция показа уведомлений
+function showAlert(type, message) {
+    const alert = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="close" data-dismiss="alert">
+                <span>&times;</span>
+            </button>
+        </div>
+    `;
+    
+    if ($('.container-fluid').length) {
+        $('.container-fluid').first().prepend(alert);
+    } else {
+        $('body').prepend('<div class="container-fluid">' + alert + '</div>');
+    }
+    
+    setTimeout(function() {
+        $('.alert').fadeOut();
+    }, 5000);
+}
+</script>

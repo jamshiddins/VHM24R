@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block title %}Результаты обработки - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        Результаты обработки файлов
+                    </h3>
+                    <div class="card-tools">
+                        <span class="badge badge-info">Сессия: {{ session_id[:8] }}...</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Общая статистика -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="info-box">
+                                <span class="info-box-icon bg-info"><i class="fas fa-file"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Файлов обработано</span>
+                                    <span class="info-box-number">{{ processing_results|length }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="info-box">
+                                <span class="info-box-icon bg-success"><i class="fas fa-check"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Успешных заказов</span>
+                                    <span class="info-box-number">{{ matching_stats.get('OK', 0) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="info-box">
+                                <span class="info-box-icon bg-warning"><i class="fas fa-exclamation-triangle"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">С ошибками</span>
+                                    <span class="info-box-number">{{ matching_stats.get('total', 0) - matching_stats.get('OK', 0) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="info-box">
+                                <span class="info-box-icon bg-primary"><i class="fas fa-chart-pie"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Успешность</span>
+                                    <span class="info-box-number">
+                                        {% if matching_stats.get('total', 0) > 0 %}
+                                            {{ "%.1f"|format((matching_stats.get('OK', 0) / matching_stats.get('total', 1) * 100)) }}%
+                                        {% else %}
+                                            0%
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Детали обработки файлов -->
+                    <h4>Детали обработки файлов:</h4>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Файл</th>
+                                    <th>Тип</th>
+                                    <th>Статус</th>
+                                    <th>Обработано записей</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for result in processing_results %}
+                                <tr>
+                                    <td>{{ result.filename }}</td>
+                                    <td>
+                                        {% if result.file_type == 'happy_workers' %}
+                                            <span class="badge badge-primary">Happy Workers</span>
+                                        {% elif result.file_type == 'vendhub' %}
+                                            <span class="badge badge-info">VendHub</span>
+                                        {% elif result.file_type == 'fiscal_bills' %}
+                                            <span class="badge badge-success">Фискальные чеки</span>
+                                        {% elif result.file_type in ['payme', 'click', 'uzum'] %}
+                                            <span class="badge badge-warning">{{ result.file_type.title() }}</span>
+                                        {% elif result.file_type == 'duplicate' %}
+                                            <span class="badge badge-secondary">Дубликат</span>
+                                        {% else %}
+                                            <span class="badge badge-danger">Неизвестный</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if result.status == 'success' %}
+                                            <span class="badge badge-success">Успешно</span>
+                                        {% elif result.status == 'duplicate' %}
+                                            <span class="badge badge-warning">Дубликат</span>
+                                        {% elif result.status == 'unknown_type' %}
+                                            <span class="badge badge-danger">Неизвестный тип</span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">{{ result.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ result.processed_count }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Статистика сверки -->
+                    {% if matching_stats.get('total', 0) > 0 %}
+                    <h4 class="mt-4">Результаты сверки:</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title">Распределение по типам ошибок</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="progress-group">
+                                        <span class="progress-text">Успешные (OK)</span>
+                                        <span class="float-right"><b>{{ matching_stats.get('OK', 0) }}</b></span>
+                                        <div class="progress progress-sm">
+                                            <div class="progress-bar bg-success" style="width: {{ (matching_stats.get('OK', 0) / matching_stats.get('total', 1) * 100)|round(1) }}%"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if matching_stats.get('NO_MATCH_IN_REPORT', 0) > 0 %}
+                                    <div class="progress-group">
+                                        <span class="progress-text">Нет во внутреннем учете</span>
+                                        <span class="float-right"><b>{{ matching_stats.get('NO_MATCH_IN_REPORT', 0) }}</b></span>
+                                        <div class="progress progress-sm">
+                                            <div class="progress-bar bg-warning" style="width: {{ (matching_stats.get('NO_MATCH_IN_REPORT', 0) / matching_stats.get('total', 1) * 100)|round(1) }}%"></div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if matching_stats.get('NO_PAYMENT_FOUND', 0) > 0 %}
+                                    <div class="progress-group">
+                                        <span class="progress-text">Нет оплаты</span>
+                                        <span class="float-right"><b>{{ matching_stats.get('NO_PAYMENT_FOUND', 0) }}</b></span>
+                                        <div class="progress progress-sm">
+                                            <div class="progress-bar bg-danger" style="width: {{ (matching_stats.get('NO_PAYMENT_FOUND', 0) / matching_stats.get('total', 1) * 100)|round(1) }}%"></div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if matching_stats.get('FISCAL_MISSING', 0) > 0 %}
+                                    <div class="progress-group">
+                                        <span class="progress-text">Нет фискальных чеков</span>
+                                        <span class="float-right"><b>{{ matching_stats.get('FISCAL_MISSING', 0) }}</b></span>
+                                        <div class="progress progress-sm">
+                                            <div class="progress-bar bg-info" style="width: {{ (matching_stats.get('FISCAL_MISSING', 0) / matching_stats.get('total', 1) * 100)|round(1) }}%"></div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title">Рекомендации</h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if matching_stats.get('NO_MATCH_IN_REPORT', 0) > 0 %}
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                                        Найдены заказы, отсутствующие во внутреннем учете. Проверьте синхронизацию систем.
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if matching_stats.get('NO_PAYMENT_FOUND', 0) > 0 %}
+                                    <div class="alert alert-danger">
+                                        <i class="fas fa-credit-card mr-2"></i>
+                                        Найдены заказы без соответствующих платежей. Проверьте платежные шлюзы.
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if matching_stats.get('FISCAL_MISSING', 0) > 0 %}
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-receipt mr-2"></i>
+                                        Найдены Cash заказы без фискальных чеков. Проверьте фискальную отчетность.
+                                    </div>
+                                    {% endif %}
+                                    
+                                    {% if matching_stats.get('OK', 0) == matching_stats.get('total', 0) %}
+                                    <div class="alert alert-success">
+                                        <i class="fas fa-check-circle mr-2"></i>
+                                        Отлично! Все заказы успешно сверены.
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Действия -->
+                    <div class="mt-4">
+                        <a href="{{ url_for('orders_list') }}" class="btn btn-primary">
+                            <i class="fas fa-list mr-2"></i>
+                            Просмотреть заказы
+                        </a>
+                        <a href="{{ url_for('upload_files') }}" class="btn btn-secondary ml-2">
+                            <i class="fas fa-upload mr-2"></i>
+                            Загрузить еще файлы
+                        </a>
+                        <a href="{{ url_for('index') }}" class="btn btn-info ml-2">
+                            <i class="fas fa-home mr-2"></i>
+                            На главную
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Автоматическое обновление через 30 секунд если есть необработанные заказы
+    {% if matching_stats.get('UNPROCESSED', 0) > 0 %}
+    setTimeout(function() {
+        location.reload();
+    }, 30000);
+    {% endif %}
+});
+</script>
+{% endblock %}

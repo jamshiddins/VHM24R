@@ -1,126 +1,305 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Отчет обработки</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/style.css">
-</head>
-<body>
-    <div class="container mt-5">
-        <h1 class="text-center mb-4">Результаты обработки</h1>
-        
-        <!-- Загруженные файлы -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <h5 class="card-title">Обработанные файлы</h5>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Файл</th>
-                            <th>Тип</th>
-                            <th>Обработано записей</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for result in results %}
-                        <tr>
-                            <td>{{ result.filename }}</td>
-                            <td>
-                                <span class="badge bg-{{ 'success' if result.type != 'unknown' else 'warning' }}">
-                                    {{ result.type }}
-                                </span>
-                            </td>
-                            <td>{{ result.processed }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+{% extends "base.html" %}
+
+{% block title %}Результаты обработки - ODUS-RFM v5.0{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-12">
+            <!-- Заголовок -->
+            <div class="text-center mb-4">
+                <h1 class="display-5">
+                    <i class="fas fa-chart-line text-success me-3"></i>
+                    Результаты обработки файлов
+                </h1>
+                <p class="lead text-muted">Сессия: <code>{{ session_id }}</code></p>
             </div>
+
+            <!-- Статистика обработки -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-chart-bar me-2"></i>
+                                Общая статистика обработки
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-md-2 mb-3">
+                                    <div class="stats-card p-3 border rounded">
+                                        <div class="stats-number text-primary">{{ stats.total or 0 }}</div>
+                                        <div class="text-muted">Всего заказов</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 mb-3">
+                                    <div class="stats-card p-3 border rounded bg-success text-white">
+                                        <div class="stats-number">{{ stats.matched or 0 }}</div>
+                                        <div>Сопоставлено</div>
+                                        <a href="#" onclick="showOrderDetails('matched')" class="text-white">
+                                            <small><i class="fas fa-eye me-1"></i>Детали</small>
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 mb-3">
+                                    <div class="stats-card p-3 border rounded bg-warning text-dark">
+                                        <div class="stats-number">{{ stats.time_mismatch or 0 }}</div>
+                                        <div>Расхождение времени</div>
+                                        <a href="#" onclick="showOrderDetails('time_mismatch')" class="text-dark">
+                                            <small><i class="fas fa-eye me-1"></i>Детали</small>
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 mb-3">
+                                    <div class="stats-card p-3 border rounded bg-warning text-dark">
+                                        <div class="stats-number">{{ stats.price_mismatch or 0 }}</div>
+                                        <div>Расхождение цены</div>
+                                        <a href="#" onclick="showOrderDetails('price_mismatch')" class="text-dark">
+                                            <small><i class="fas fa-eye me-1"></i>Детали</small>
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 mb-3">
+                                    <div class="stats-card p-3 border rounded bg-info text-white">
+                                        <div class="stats-number">{{ stats.fiscal_matched or 0 }}</div>
+                                        <div>Фискальные сопоставлены</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 mb-3">
+                                    <div class="stats-card p-3 border rounded bg-danger text-white">
+                                        <div class="stats-number">{{ stats.unmatched or 0 }}</div>
+                                        <div>Не сопоставлено</div>
+                                        <a href="#" onclick="showOrderDetails('unmatched')" class="text-white">
+                                            <small><i class="fas fa-eye me-1"></i>Детали</small>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {% if stats.total and stats.total > 0 %}
+                            <div class="mt-4">
+                                <h6>Процент успешности сопоставления:</h6>
+                                <div class="progress" style="height: 25px;">
+                                    {% set success_rate = ((stats.matched or 0) / stats.total * 100) | round(1) %}
+                                    <div class="progress-bar bg-success" role="progressbar" 
+                                         style="width: {{ success_rate }}%" 
+                                         aria-valuenow="{{ success_rate }}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                        {{ success_rate }}%
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Результаты обработки файлов -->
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-file-import me-2"></i>
+                                Обработанные файлы
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if results %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th><i class="fas fa-file me-1"></i>Файл</th>
+                                            <th><i class="fas fa-tag me-1"></i>Тип</th>
+                                            <th><i class="fas fa-list-ol me-1"></i>Обработано записей</th>
+                                            <th><i class="fas fa-check-circle me-1"></i>Статус</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for result in results %}
+                                        <tr>
+                                            <td>
+                                                <i class="fas fa-file-alt text-primary me-2"></i>
+                                                <strong>{{ result.filename }}</strong>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-secondary">{{ result.type or 'unknown' }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary">{{ result.processed or 0 }}</span>
+                                            </td>
+                                            <td>
+                                                {% if result.processed and result.processed > 0 %}
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-check me-1"></i>Успешно
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-warning">
+                                                        <i class="fas fa-exclamation-triangle me-1"></i>Ошибка
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">Файлы не были обработаны</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Действия -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card border-primary h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-chart-bar fa-2x text-primary mb-3"></i>
+                            <h6>Перейти к дашборду</h6>
+                            <p class="text-muted small">Просмотр расширенной аналитики</p>
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                                <i class="fas fa-arrow-right me-2"></i>Открыть дашборд
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-success h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-download fa-2x text-success mb-3"></i>
+                            <h6>Экспорт всех данных</h6>
+                            <p class="text-muted small">Выгрузка в CSV формате</p>
+                            <a href="/api/orders/export?format=csv&filter=all" class="btn btn-success">
+                                <i class="fas fa-file-csv me-2"></i>Скачать CSV
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-info h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-upload fa-2x text-info mb-3"></i>
+                            <h6>Загрузить еще файлы</h6>
+                            <p class="text-muted small">Продолжить обработку</p>
+                            <a href="{{ url_for('index') }}" class="btn btn-info">
+                                <i class="fas fa-plus me-2"></i>Загрузить файлы
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Рекомендации -->
+            {% if stats.unmatched and stats.unmatched > 0 %}
+            <div class="alert alert-warning" role="alert">
+                <h6 class="alert-heading">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Рекомендации по улучшению сопоставления
+                </h6>
+                <p class="mb-2">Обнаружено {{ stats.unmatched }} несопоставленных заказов.</p>
+                <ul class="mb-0">
+                    <li>Проверьте правильность форматов времени в исходных файлах</li>
+                    <li>Убедитесь, что коды автоматов совпадают между системами</li>
+                    <li>Рассмотрите возможность корректировки временных интервалов для сопоставления</li>
+                    <li>Проверьте наличие всех необходимых файлов (HW, VendHub, фискальные данные)</li>
+                </ul>
+            </div>
+            {% endif %}
         </div>
-        
-        <!-- Статистика сопоставления -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <h5 class="card-title">Статистика сопоставления</h5>
-                
-                <div class="stats-section">
-                    <h6>Базовое сопоставление HW ↔ VendHub</h6>
-                    <ul>
-                        <li>
-                            Найдено 
-                            <a href="#" class="stat-link" 
-                               onclick="showDetails('matched', {{ stats.matched }})">
-                                {{ stats.matched }}
-                            </a> 
-                            совпадающих заказов
-                        </li>
-                        <li>
-                            <a href="#" class="stat-link" 
-                               onclick="showDetails('time_mismatch', {{ stats.time_mismatch }})">
-                                {{ stats.time_mismatch }}
-                            </a> 
-                            заказов с расхождениями во времени
-                        </li>
-                        <li>
-                            <a href="#" class="stat-link" 
-                               onclick="showDetails('price_mismatch', {{ stats.price_mismatch }})">
-                                {{ stats.price_mismatch }}
-                            </a> 
-                            заказов с расхождениями в цене
-                        </li>
-                    </ul>
+    </div>
+</div>
+
+<!-- Модальное окно для деталей заказов -->
+<div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="orderDetailsModalLabel">Детали заказов</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="orderDetailsContent">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Загрузка...</span>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="stats-section">
-                    <h6>Фискальные данные</h6>
-                    <ul>
-                        <li>
-                            <a href="#" class="stat-link" 
-                               onclick="showDetails('fiscal_mismatch', {{ stats.fiscal_mismatch }})">
-                                {{ stats.fiscal_mismatch }}
-                            </a> 
-                            заказов без фискальных чеков
-                        </li>
-                    </ul>
-                </div>
-                
-                <div class="mt-3">
-                    <a href="/" class="btn btn-primary">Новая загрузка</a>
-                    <button class="btn btn-success" onclick="exportAll()">
-                        Экспортировать все
-                    </button>
-                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
             </div>
         </div>
     </div>
-    
-    <!-- Модальное окно для деталей -->
-    <div class="modal fade" id="detailsModal" tabindex="-1">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalTitle">Детали</h5>
-                    <button type="button" class="btn-close" 
-                            data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="ordersTable"></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" 
-                            data-bs-dismiss="modal">Закрыть</button>
-                    <button type="button" class="btn btn-primary" 
-                            onclick="exportCurrentFilter()">
-                        Экспортировать
-                    </button>
-                </div>
-            </div>
-        </div>
+</div>
+
+<!-- Спиннер загрузки -->
+<div id="loadingSpinner" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999;">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Загрузка...</span>
     </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Инициализация анимаций для статистических карточек
+document.addEventListener('DOMContentLoaded', function() {
+    // Анимация чисел в статистике
+    const statsNumbers = document.querySelectorAll('.stats-number');
+    statsNumbers.forEach((element, index) => {
+        const finalValue = parseInt(element.textContent) || 0;
+        if (finalValue > 0) {
+            animateNumber(element, 0, finalValue, 1000 + (index * 200));
+        }
+    });
     
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/static/js/app.js"></script>
-</body>
-</html>
+    // Анимация прогресс-бара
+    const progressBar = document.querySelector('.progress-bar');
+    if (progressBar) {
+        const targetWidth = progressBar.style.width;
+        progressBar.style.width = '0%';
+        setTimeout(() => {
+            progressBar.style.transition = 'width 2s ease';
+            progressBar.style.width = targetWidth;
+        }, 500);
+    }
+});
+
+function animateNumber(element, start, end, duration) {
+    const startTime = performance.now();
+    const originalText = element.textContent;
+    
+    function updateNumber(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        const current = Math.floor(start + (end - start) * progress);
+        element.textContent = current.toLocaleString('ru-RU');
+        
+        if (progress < 1) {
+            requestAnimationFrame(updateNumber);
+        }
+    }
+    
+    requestAnimationFrame(updateNumber);
+}
+
+// Функция для экспорта определенного типа заказов
+function exportFilteredOrders(filter) {
+    const url = `/api/orders/export?format=csv&filter=${filter}`;
+    window.open(url, '_blank');
+    showNotification(`Экспорт заказов (${filter}) начат`, 'success');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Внутренняя ошибка сервера - ODUS-RFM v5.0{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="text-center py-5">
+                <div class="mb-4">
+                    <i class="fas fa-exclamation-triangle fa-5x text-danger"></i>
+                </div>
+                <h1 class="display-1 text-danger">500</h1>
+                <h2 class="mb-3">Внутренняя ошибка сервера</h2>
+                <p class="lead text-muted mb-4">
+                    Произошла внутренняя ошибка сервера. Администраторы уведомлены.
+                </p>
+                
+                <div class="alert alert-light border" role="alert">
+                    <h6 class="alert-heading">Что можно сделать:</h6>
+                    <ul class="text-start mb-0">
+                        <li>Попробуйте обновить страницу через несколько минут</li>
+                        <li>Проверьте правильность загружаемых файлов</li>
+                        <li>Обратитесь к администратору, если проблема повторяется</li>
+                    </ul>
+                </div>
+                
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{{ url_for('index') }}" class="btn btn-primary">
+                        <i class="fas fa-home me-2"></i>
+                        На главную
+                    </a>
+                <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        К дашборду
+                    </a>
+                    <button class="btn btn-outline-secondary" onclick="location.reload()">
+                        <i class="fas fa-sync-alt me-2"></i>
+                        Обновить
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

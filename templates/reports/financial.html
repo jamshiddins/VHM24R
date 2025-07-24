@@ -1,0 +1,434 @@
+{% extends "base.html" %}
+
+{% block title %}Финансовый отчет - ODUS-RFM v5.0{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="text-gradient">
+                <i class="fas fa-chart-line me-2"></i>
+                Финансовый отчет
+            </h2>
+            <div class="btn-group">
+                <button class="btn btn-outline-primary" onclick="exportReport('pdf')">
+                    <i class="fas fa-file-pdf me-2"></i>PDF
+                </button>
+                <button class="btn btn-outline-success" onclick="exportReport('excel')">
+                    <i class="fas fa-file-excel me-2"></i>Excel
+                </button>
+            </div>
+        </div>
+
+        <!-- Фильтры периода -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-filter me-2"></i>
+                    Период отчета
+                </h6>
+            </div>
+            <div class="card-body">
+                <form id="periodForm" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Дата начала</label>
+                        <input type="date" class="form-control" name="start_date" value="{{ start_date }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Дата окончания</label>
+                        <input type="date" class="form-control" name="end_date" value="{{ end_date }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-2"></i>Сформировать отчет
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Общая статистика -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <div class="text-primary mb-2">
+                            <i class="fas fa-shopping-cart fa-2x"></i>
+                        </div>
+                        <h4 class="text-light">{{ "{:,.0f}"|format(report_data.total_sales) }}</h4>
+                        <small class="text-muted">Общие продажи (сум)</small>
+                        <div class="mt-2">
+                            <span class="badge bg-info">{{ report_data.orders_count }} заказов</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <div class="text-success mb-2">
+                            <i class="fas fa-money-bill-wave fa-2x"></i>
+                        </div>
+                        <h4 class="text-light">{{ "{:,.0f}"|format(report_data.cash_sales) }}</h4>
+                        <small class="text-muted">Продажи наличными (сум)</small>
+                        <div class="mt-2">
+                            <span class="badge bg-success">
+                                {{ "%.1f"|format((report_data.cash_sales / report_data.total_sales * 100) if report_data.total_sales > 0 else 0) }}%
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <div class="text-info mb-2">
+                            <i class="fas fa-credit-card fa-2x"></i>
+                        </div>
+                        <h4 class="text-light">{{ "{:,.0f}"|format(report_data.card_sales) }}</h4>
+                        <small class="text-muted">Безналичные продажи (сум)</small>
+                        <div class="mt-2">
+                            <span class="badge bg-info">
+                                {{ "%.1f"|format((report_data.card_sales / report_data.total_sales * 100) if report_data.total_sales > 0 else 0) }}%
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <div class="text-warning mb-2">
+                            <i class="fas fa-hand-holding-usd fa-2x"></i>
+                        </div>
+                        <h4 class="text-light">{{ "{:,.0f}"|format(report_data.cash_collected) }}</h4>
+                        <small class="text-muted">Инкассировано (сум)</small>
+                        <div class="mt-2">
+                            <span class="badge bg-warning">{{ report_data.collections_count }} инкассаций</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Детализация по платежным системам -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-credit-card me-2"></i>
+                    Поступления по платежным системам
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Платежная система</th>
+                                <th>Транзакций</th>
+                                <th>Сумма поступлений</th>
+                                <th>Доля от общих поступлений</th>
+                                <th>Статус</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% set total_bank_income = report_data.bank_income|sum(attribute='total_received') %}
+                            {% for system in report_data.bank_income %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if system.payment_system == 'payme' %}
+                                            <div class="badge bg-primary me-2">P</div>
+                                        {% elif system.payment_system == 'click' %}
+                                            <div class="badge bg-success me-2">C</div>
+                                        {% elif system.payment_system == 'uzum' %}
+                                            <div class="badge bg-info me-2">U</div>
+                                        {% else %}
+                                            <div class="badge bg-secondary me-2">?</div>
+                                        {% endif %}
+                                        <strong class="text-light">{{ system.payment_system|title }}</strong>
+                                    </div>
+                                </td>
+                                <td>{{ system.transactions_count }}</td>
+                                <td>
+                                    <span class="text-success">{{ "{:,.0f}"|format(system.total_received or 0) }} сум</span>
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        {% set percentage = (system.total_received / total_bank_income * 100) if total_bank_income > 0 else 0 %}
+                                        <div class="progress-bar" data-percentage="{{ "%.1f"|format(percentage) }}">
+                                            {{ "%.1f"|format(percentage) }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success">Активна</span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">
+                                    <i class="fas fa-credit-card fa-2x mb-2"></i>
+                                    <br>Данные по платежным системам отсутствуют
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Скрытые данные для JavaScript -->
+        <div style="display: none;" 
+             data-cash-sales="{{ report_data.cash_sales|default(0) }}" 
+             data-card-sales="{{ report_data.card_sales|default(0) }}"></div>
+
+        <!-- График динамики продаж -->
+        <div class="row">
+            <div class="col-md-8 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-chart-area me-2"></i>
+                            Динамика продаж за период
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="salesChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-chart-pie me-2"></i>
+                            Структура платежей
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="paymentChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Детальная таблица -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-table me-2"></i>
+                    Детализация по дням
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="dailyTable">
+                        <thead>
+                            <tr>
+                                <th>Дата</th>
+                                <th>Заказов</th>
+                                <th>Общие продажи</th>
+                                <th>Наличные</th>
+                                <th>Безналичные</th>
+                                <th>Инкассировано</th>
+                                <th>Эффективность</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Данные будут загружены через AJAX -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Инициализация графиков
+    initSalesChart();
+    initPaymentChart();
+    loadDailyData();
+});
+
+// График динамики продаж
+function initSalesChart() {
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [], // Будет заполнено данными
+            datasets: [{
+                label: 'Общие продажи',
+                data: [],
+                borderColor: '#e67e22',
+                backgroundColor: 'rgba(230, 126, 34, 0.1)',
+                tension: 0.4
+            }, {
+                label: 'Наличные',
+                data: [],
+                borderColor: '#27ae60',
+                backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                tension: 0.4
+            }, {
+                label: 'Безналичные',
+                data: [],
+                borderColor: '#3498db',
+                backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#ffffff'
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: '#ffffff'
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                y: {
+                    ticks: {
+                        color: '#ffffff',
+                        callback: function(value) {
+                            return value.toLocaleString() + ' сум';
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// График структуры платежей
+function initPaymentChart() {
+    const ctx = document.getElementById('paymentChart').getContext('2d');
+    
+    // Получаем данные из скрытых элементов или используем значения по умолчанию
+    const cashSales = parseFloat(document.querySelector('[data-cash-sales]')?.dataset.cashSales) || 0;
+    const cardSales = parseFloat(document.querySelector('[data-card-sales]')?.dataset.cardSales) || 0;
+    
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Наличные', 'Безналичные'],
+            datasets: [{
+                data: [cashSales, cardSales],
+                backgroundColor: ['#27ae60', '#3498db'],
+                borderWidth: 2,
+                borderColor: '#2c3e50'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#ffffff'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Загрузка данных по дням
+function loadDailyData() {
+    const startDate = '{{ start_date|default("") }}';
+    const endDate = '{{ end_date|default("") }}';
+    
+    if (!startDate || !endDate) {
+        console.warn('Start date or end date is missing');
+        return;
+    }
+    
+    fetch(`/api/daily-financial-data?start_date=${startDate}&end_date=${endDate}`)
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.querySelector('#dailyTable tbody');
+            tbody.innerHTML = '';
+            
+            data.forEach(day => {
+                const row = document.createElement('tr');
+                const efficiency = day.total_sales > 0 ? (day.cash_collected / day.cash_sales * 100) : 0;
+                
+                row.innerHTML = `
+                    <td>${day.date}</td>
+                    <td>${day.orders_count}</td>
+                    <td><span class="text-success">${day.total_sales.toLocaleString()} сум</span></td>
+                    <td><span class="text-success">${day.cash_sales.toLocaleString()} сум</span></td>
+                    <td><span class="text-info">${day.card_sales.toLocaleString()} сум</span></td>
+                    <td><span class="text-warning">${day.cash_collected.toLocaleString()} сум</span></td>
+                    <td>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar ${efficiency > 80 ? 'bg-success' : efficiency > 60 ? 'bg-warning' : 'bg-danger'}" 
+                                 style="width: ${Math.min(efficiency, 100)}%">
+                                ${efficiency.toFixed(1)}%
+                            </div>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading daily data:', error);
+        });
+}
+
+// Обработка формы периода
+document.getElementById('periodForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const params = new URLSearchParams(formData);
+    
+    window.location.href = `/reports/financial?${params.toString()}`;
+});
+
+// Экспорт отчета
+function exportReport(format) {
+    const startDate = '{{ start_date|default("") }}';
+    const endDate = '{{ end_date|default("") }}';
+    
+    if (!startDate || !endDate) {
+        alert('Пожалуйста, выберите период для экспорта отчета');
+        return;
+    }
+    
+    const url = `/api/export-financial-report?format=${format}&start_date=${startDate}&end_date=${endDate}`;
+    
+    // Создаем скрытую ссылку для скачивания
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `financial_report_${startDate}_${endDate}.${format}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+</script>
+{% endblock %}

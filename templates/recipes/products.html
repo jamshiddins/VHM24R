@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}Продукты - ODUS-RFM v5.0{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="text-gradient">
+                <i class="fas fa-box me-2"></i>
+                Управление продуктами
+            </h2>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                <i class="fas fa-plus me-2"></i>Добавить продукт
+            </button>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Список продуктов
+                    <span class="badge bg-info ms-2">{{ products|length }}</span>
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Название</th>
+                                <th>Категория</th>
+                                <th>Единица измерения</th>
+                                <th>Цена продажи</th>
+                                <th>Статус</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in products %}
+                            <tr>
+                                <td>{{ product.id }}</td>
+                                <td>
+                                    <strong class="text-light">{{ product.name }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ product.category }}</span>
+                                </td>
+                                <td>{{ product.unit }}</td>
+                                <td>
+                                    <span class="text-success">{{ "%.2f"|format(product.selling_price) }} сум</span>
+                                </td>
+                                <td>
+                                    {% if product.active %}
+                                        <span class="badge bg-success">Активен</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Неактивен</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary" onclick="editProduct({{ product.id }})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger" onclick="deleteProduct({{ product.id }})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">
+                                    <i class="fas fa-box-open fa-2x mb-2"></i>
+                                    <br>Продукты не найдены
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно добавления продукта -->
+<div class="modal fade" id="addProductModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus me-2"></i>
+                    Добавить новый продукт
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addProductForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Название продукта</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Категория</label>
+                        <select class="form-select" name="category" required>
+                            <option value="">Выберите категорию</option>
+                            <option value="Напитки">Напитки</option>
+                            <option value="Снеки">Снеки</option>
+                            <option value="Горячие блюда">Горячие блюда</option>
+                            <option value="Десерты">Десерты</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Единица измерения</label>
+                        <select class="form-select" name="unit" required>
+                            <option value="">Выберите единицу</option>
+                            <option value="шт">штука</option>
+                            <option value="л">литр</option>
+                            <option value="мл">миллилитр</option>
+                            <option value="г">грамм</option>
+                            <option value="кг">килограмм</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Цена продажи (сум)</label>
+                        <input type="number" class="form-control" name="selling_price" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="active" id="activeCheck" checked>
+                            <label class="form-check-label" for="activeCheck">
+                                Активный продукт
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Сохранить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('addProductForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData.entries());
+    data.active = formData.has('active');
+    
+    fetch('/recipes/products', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Ошибка при добавлении продукта');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Произошла ошибка');
+    });
+});
+
+function editProduct(id) {
+    // Функция редактирования продукта
+    alert('Функция редактирования в разработке');
+}
+
+function deleteProduct(id) {
+    if (confirm('Вы уверены, что хотите удалить этот продукт?')) {
+        fetch(`/recipes/products/${id}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Ошибка при удалении продукта');
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}Просмотр заказов - VHM24R{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-list"></i> Просмотр заказов</h2>
+                <a href="{{ url_for('export_orders', **current_filters) }}" class="btn btn-success">
+                    <i class="fas fa-download"></i> Экспорт в Excel
+                </a>
+            </div>
+
+            <!-- Фильтры -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-filter"></i> Фильтры</h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" action="{{ url_for('orders_list') }}">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label for="error_type" class="form-label">Тип ошибки</label>
+                                <select class="form-select" id="error_type" name="error_type">
+                                    <option value="">Все</option>
+                                    <option value="OK" {% if current_filters.error_type == 'OK' %}selected{% endif %}>✅ Успешно</option>
+                                    <option value="NO_MATCH_IN_REPORT" {% if current_filters.error_type == 'NO_MATCH_IN_REPORT' %}selected{% endif %}>❌ Нет в отчете</option>
+                                    <option value="NO_PAYMENT_FOUND" {% if current_filters.error_type == 'NO_PAYMENT_FOUND' %}selected{% endif %}>💳 Нет платежа</option>
+                                    <option value="FISCAL_MISSING" {% if current_filters.error_type == 'FISCAL_MISSING' %}selected{% endif %}>🧾 Нет фискального чека</option>
+                                    <option value="UNPROCESSED" {% if current_filters.error_type == 'UNPROCESSED' %}selected{% endif %}>⏳ Не обработано</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="machine_code" class="form-label">Код автомата</label>
+                                <select class="form-select" id="machine_code" name="machine_code">
+                                    <option value="">Все автоматы</option>
+                                    {% for code in machine_codes %}
+                                    <option value="{{ code }}" {% if current_filters.machine_code == code %}selected{% endif %}>{{ code }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="date_from" class="form-label">Дата с</label>
+                                <input type="date" class="form-control" id="date_from" name="date_from" value="{{ current_filters.date_from or '' }}">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="date_to" class="form-label">Дата по</label>
+                                <input type="date" class="form-control" id="date_to" name="date_to" value="{{ current_filters.date_to or '' }}">
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary me-2">
+                                    <i class="fas fa-search"></i> Применить
+                                </button>
+                                <a href="{{ url_for('orders_list') }}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times"></i> Сбросить
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Таблица заказов -->
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-table"></i> Заказы ({{ orders|length }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if orders %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Номер заказа</th>
+                                    <th>Автомат</th>
+                                    <th>Время создания</th>
+                                    <th>Сумма</th>
+                                    <th>Способ оплаты</th>
+                                    <th>Статус</th>
+                                    <th>Источник</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in orders %}
+                                <tr>
+                                    <td>{{ order.id }}</td>
+                                    <td>
+                                        {% if order.order_number %}
+                                            <code>{{ order.order_number }}</code>
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if order.machine_code %}
+                                            <span class="badge bg-info">{{ order.machine_code }}</span>
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if order.creation_time %}
+                                            <small>{{ order.creation_time.strftime('%d.%m.%Y %H:%M') if order.creation_time else '—' }}</small>
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if order.amount %}
+                                            <strong>{{ "{:,.0f}".format(order.amount) }} сум</strong>
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if order.payment_method %}
+                                            {% if order.payment_method == 'Cash' %}
+                                                <span class="badge bg-success">💰 Наличные</span>
+                                            {% elif order.payment_method == 'Custom payment' %}
+                                                <span class="badge bg-primary">💳 Карта</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ order.payment_method }}</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if order.error_type %}
+                                            {% if order.error_type == 'OK' %}
+                                                <span class="badge bg-success">✅ Успешно</span>
+                                            {% elif order.error_type == 'NO_MATCH_IN_REPORT' %}
+                                                <span class="badge bg-danger">❌ Нет в отчете</span>
+                                            {% elif order.error_type == 'NO_PAYMENT_FOUND' %}
+                                                <span class="badge bg-warning">💳 Нет платежа</span>
+                                            {% elif order.error_type == 'FISCAL_MISSING' %}
+                                                <span class="badge bg-info">🧾 Нет фискального чека</span>
+                                            {% elif order.error_type == 'UNPROCESSED' %}
+                                                <span class="badge bg-secondary">⏳ Не обработано</span>
+                                            {% else %}
+                                                <span class="badge bg-dark">{{ order.error_type }}</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-secondary">⏳ Не обработано</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if order.source %}
+                                            <small class="text-muted">{{ order.source }}</small>
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Заказы не найдены</h5>
+                        <p class="text-muted">Попробуйте изменить фильтры или загрузить новые файлы</p>
+                        <a href="{{ url_for('upload_files') }}" class="btn btn-primary">
+                            <i class="fas fa-upload"></i> Загрузить файлы
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.table th {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.table td {
+    font-size: 0.9rem;
+    vertical-align: middle;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+
+code {
+    background-color: #f8f9fa;
+    color: #e83e8c;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.8rem;
+}
+
+.card-header h5 {
+    margin: 0;
+    color: #495057;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.table-responsive {
+    border-radius: 0.5rem;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
+</style>
+{% endblock %}

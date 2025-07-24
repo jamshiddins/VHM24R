@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Загрузка файлов - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-upload mr-2"></i>
+                        Загрузка файлов для сверки
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h5><i class="icon fas fa-info"></i> Поддерживаемые типы файлов:</h5>
+                        <ul class="mb-0">
+                            <li><strong>HW.xlsx</strong> - Отчёт заказов из автомата Happy Workers</li>
+                            <li><strong>report.xlsx</strong> - Внутренний отчёт системы VendHub</li>
+                            <li><strong>fiscal_bills.xlsx</strong> - Фискальные чеки</li>
+                            <li><strong>Payme.xlsx</strong> - Транзакции Payme</li>
+                            <li><strong>Click.xlsx</strong> - Транзакции Click</li>
+                            <li><strong>Uzum.xlsx</strong> - Транзакции Uzum</li>
+                        </ul>
+                    </div>
+
+                    <form method="POST" enctype="multipart/form-data" id="uploadForm">
+                        <div class="form-group">
+                            <label for="files">Выберите файлы для загрузки:</label>
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" id="files" name="files" multiple accept=".xlsx,.xls,.csv">
+                                <label class="custom-file-label" for="files">Выберите файлы...</label>
+                            </div>
+                            <small class="form-text text-muted">
+                                Максимальный размер файла: 100MB. Можно выбрать несколько файлов.
+                            </small>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary btn-lg" id="uploadBtn">
+                                <i class="fas fa-upload mr-2"></i>
+                                Загрузить и обработать
+                            </button>
+                            <a href="{{ url_for('index') }}" class="btn btn-secondary btn-lg ml-2">
+                                <i class="fas fa-arrow-left mr-2"></i>
+                                Назад
+                            </a>
+                        </div>
+                    </form>
+
+                    <!-- Прогресс загрузки -->
+                    <div id="uploadProgress" class="d-none">
+                        <div class="progress mb-3">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <div class="text-center">
+                            <i class="fas fa-spinner fa-spin mr-2"></i>
+                            Обработка файлов...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Инструкции -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">
+                        <i class="fas fa-question-circle mr-2"></i>
+                        Инструкции по загрузке
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Порядок обработки:</h5>
+                            <ol>
+                                <li>Система автоматически определит тип каждого файла</li>
+                                <li>Данные будут импортированы в базу данных</li>
+                                <li>Запустится процесс интеллектуальной сверки</li>
+                                <li>Результаты будут сохранены и отправлены в Telegram</li>
+                            </ol>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Типы ошибок сверки:</h5>
+                            <ul>
+                                <li><span class="badge badge-success">OK</span> - Всё совпадает</li>
+                                <li><span class="badge badge-warning">NO_MATCH_IN_REPORT</span> - Нет во внутреннем учете</li>
+                                <li><span class="badge badge-danger">NO_PAYMENT_FOUND</span> - Нет оплаты</li>
+                                <li><span class="badge badge-info">FISCAL_MISSING</span> - Нет фискального чека</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Обновление названия файла при выборе
+    $('#files').on('change', function() {
+        var files = $(this)[0].files;
+        var fileNames = [];
+        
+        for (var i = 0; i < files.length; i++) {
+            fileNames.push(files[i].name);
+        }
+        
+        if (fileNames.length > 0) {
+            var label = fileNames.length > 1 ? 
+                fileNames.length + ' файлов выбрано' : 
+                fileNames[0];
+            $(this).next('.custom-file-label').text(label);
+        } else {
+            $(this).next('.custom-file-label').text('Выберите файлы...');
+        }
+    });
+
+    // Обработка отправки формы
+    $('#uploadForm').on('submit', function(e) {
+        var files = $('#files')[0].files;
+        
+        if (files.length === 0) {
+            e.preventDefault();
+            alert('Пожалуйста, выберите файлы для загрузки');
+            return false;
+        }
+
+        // Показываем прогресс
+        $('#uploadBtn').prop('disabled', true);
+        $('#uploadProgress').removeClass('d-none');
+        
+        // Анимация прогресса
+        var progress = 0;
+        var interval = setInterval(function() {
+            progress += Math.random() * 15;
+            if (progress > 90) progress = 90;
+            
+            $('.progress-bar').css('width', progress + '%');
+        }, 500);
+
+        // Очищаем интервал при отправке формы
+        setTimeout(function() {
+            clearInterval(interval);
+        }, 1000);
+    });
+});
+</script>
+{% endblock %}

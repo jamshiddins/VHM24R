@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ODUS-RFM v5.0{% endblock %}</title>
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style">
+    <link rel="preload" href="{{ url_for('static', filename='css/style.css') }}" as="style">
+    
+    <!-- Stylesheets -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    
+    <!-- Meta tags for PWA -->
+    <meta name="theme-color" content="#E67E22">
+    <meta name="description" content="ODUS-RFM v5.0 - Система автоматического сравнения и объединения данных заказов">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    
+    <style>
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(26, 26, 26, 0.9);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .loading-content {
+            text-align: center;
+        }
+        
+        .flash-messages {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1050;
+            max-width: 400px;
+        }
+        
+        @media (max-width: 768px) {
+            .flash-messages {
+                left: 20px;
+                right: 20px;
+                max-width: none;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Навигационная панель -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-microchip me-2 pulse"></i>
+                <span class="text-gradient">ODUS-RFM</span>
+                <small class="ms-2 text-muted">v5.0</small>
+            </a>
+            
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <!-- Модуль сверки заказов -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" 
+                           data-bs-toggle="tooltip" title="Модуль сверки заказов">
+                            <i class="fas fa-file-import me-1"></i>
+                            Сверка заказов
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('index') }}">
+                                <i class="fas fa-upload me-2 text-primary"></i>Загрузка файлов
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('orders_list') }}">
+                                <i class="fas fa-chart-bar me-2 text-info"></i>Просмотр заказов
+                            </a></li>
+                        </ul>
+                    </li>
+                    
+                </ul>
+                
+                <!-- Правая часть навигации -->
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link glow" href="{{ url_for('health_check') }}" target="_blank"
+                           data-bs-toggle="tooltip" title="Проверка состояния системы">
+                            <i class="fas fa-heartbeat me-1 text-success pulse"></i>
+                            <span class="d-none d-md-inline">Health</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <button class="btn btn-outline-primary btn-sm ms-2" onclick="refreshData()"
+                                data-bs-toggle="tooltip" title="Обновить данные">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Основной контент -->
+    <main class="container-fluid mt-4">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show fade-in-up" 
+                             role="alert" style="animation-delay: {{ loop.index0 * 0.1 }}s;">
+                            <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'info-circle' if category == 'info' else 'check-circle' }} me-2"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+            <div class="loading-content">
+                <div class="loading-spinner"></div>
+                <p class="mt-3 text-light">Загрузка...</p>
+            </div>
+        </div>
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Подвал -->
+    <footer class="text-center py-4 mt-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6 text-md-start">
+                    <div class="d-flex align-items-center justify-content-center justify-content-md-start">
+                        <i class="fas fa-microchip text-gradient me-2"></i>
+                        <span class="text-gradient fw-bold">ODUS-RFM v5.0</span>
+                    </div>
+                    <small class="text-muted d-block mt-1">
+                        Order Data Unification System with Recipe & Finance Management
+                    </small>
+                </div>
+                <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                    <small class="text-muted">
+                        © 2025 | Система автоматического сравнения и объединения данных заказов
+                    </small>
+                    <div class="mt-2">
+                        <span class="badge bg-success me-2">
+                            <i class="fas fa-circle me-1" style="font-size: 0.6rem;"></i>
+                            Система активна
+                        </span>
+                        <span class="text-muted small">
+                            Время работы: <span id="uptime">--:--:--</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    
+    <!-- Uptime counter -->
+    <script>
+        // Simple uptime counter
+        let startTime = Date.now();
+        function updateUptime() {
+            const now = Date.now();
+            const diff = now - startTime;
+            const hours = Math.floor(diff / 3600000);
+            const minutes = Math.floor((diff % 3600000) / 60000);
+            const seconds = Math.floor((diff % 60000) / 1000);
+            
+            const uptimeElement = document.getElementById('uptime');
+            if (uptimeElement) {
+                uptimeElement.textContent = 
+                    `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+        
+        setInterval(updateUptime, 1000);
+        updateUptime();
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

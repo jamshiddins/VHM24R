@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block title %}Управление рецептурой - ODUS-RFM v5.0{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center mb-4">
+                <h1 class="display-4">
+                    <i class="fas fa-utensils text-success me-3"></i>
+                    Модуль управления рецептурой
+                </h1>
+                <p class="lead">Управление продуктами, ингредиентами, рецептами и складскими остатками</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Быстрая статистика -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-coffee fa-2x mb-2"></i>
+                    <h4>{{ products_count or 0 }}</h4>
+                    <p class="mb-0">Продуктов</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-seedling fa-2x mb-2"></i>
+                    <h4>{{ ingredients_count or 0 }}</h4>
+                    <p class="mb-0">Ингредиентов</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-book fa-2x mb-2"></i>
+                    <h4>{{ recipes_count or 0 }}</h4>
+                    <p class="mb-0">Рецептов</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                    <h4>{{ low_stock_count or 0 }}</h4>
+                    <p class="mb-0">Низкий остаток</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Основные разделы -->
+    <div class="row mb-4">
+        <!-- Продукты -->
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-coffee me-2"></i>
+                        Продукты
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Управление каталогом продуктов, ценами и категориями</p>
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('products_list') }}" class="btn btn-primary">
+                            <i class="fas fa-list me-2"></i>Просмотр
+                        </a>
+                        <a href="{{ url_for('add_product') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-plus me-2"></i>Добавить
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ингредиенты -->
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-seedling me-2"></i>
+                        Ингредиенты
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Управление складскими остатками и минимальными запасами</p>
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('ingredients_list') }}" class="btn btn-success">
+                            <i class="fas fa-list me-2"></i>Остатки
+                        </a>
+                        <a href="{{ url_for('add_ingredient') }}" class="btn btn-outline-success">
+                            <i class="fas fa-plus me-2"></i>Добавить
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Рецепты -->
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-book me-2"></i>
+                        Рецепты
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Составы рецептов, нормы расхода и себестоимость</p>
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('recipes_list') }}" class="btn btn-info">
+                            <i class="fas fa-list me-2"></i>Рецепты
+                        </a>
+                        <a href="{{ url_for('add_recipe') }}" class="btn btn-outline-info">
+                            <i class="fas fa-plus me-2"></i>Создать
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Закупки -->
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-shopping-cart me-2"></i>
+                        Закупки
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">История закупок, поставщики и планирование</p>
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('purchases_list') }}" class="btn btn-warning">
+                            <i class="fas fa-list me-2"></i>История
+                        </a>
+                        <a href="#" class="btn btn-outline-warning" onclick="showComingSoon('Добавление закупок')">
+                            <i class="fas fa-plus me-2"></i>Добавить
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Инвентаризация -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-clipboard-list me-2"></i>
+                        Инвентаризация
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <p class="card-text">Проведение инвентаризаций и контроль остатков</p>
+                            <div class="d-flex">
+                                <a href="{{ url_for('inventory_list') }}" class="btn btn-secondary me-2">
+                                    <i class="fas fa-history me-2"></i>История инвентаризаций
+                                </a>
+                                <button class="btn btn-outline-secondary" onclick="showComingSoon('Новая инвентаризация')">
+                                    <i class="fas fa-plus me-2"></i>Новая инвентаризация
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="alert alert-info mb-0">
+                                <h6>Последняя инвентаризация</h6>
+                                <p class="mb-0">{{ last_inventory_date or 'Не проводилась' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Быстрые действия -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt me-2"></i>
+                        Быстрые действия
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <button class="btn btn-primary" onclick="showProductCostCalculator()">
+                                    <i class="fas fa-calculator me-2"></i>
+                                    Калькулятор себестоимости
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <button class="btn btn-success" onclick="showStockReport()">
+                                    <i class="fas fa-chart-bar me-2"></i>
+                                    Отчет по остаткам
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <button class="btn btn-info" onclick="showConsumptionReport()">
+                                    <i class="fas fa-chart-line me-2"></i>
+                                    Анализ расхода
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>
+                                    К дашборду
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно "В разработке" -->
+<div class="modal fade" id="comingSoonModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">В разработке</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <i class="fas fa-tools fa-3x text-muted mb-3"></i>
+                    <p class="mb-0">Функция "<span id="featureName"></span>" находится в разработке</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showComingSoon(featureName) {
+    document.getElementById('featureName').textContent = featureName;
+    const modal = new bootstrap.Modal(document.getElementById('comingSoonModal'));
+    modal.show();
+}
+
+function showProductCostCalculator() {
+    showComingSoon('Калькулятор себестоимости продуктов');
+}
+
+function showStockReport() {
+    showComingSoon('Отчет по остаткам на складе');
+}
+
+function showConsumptionReport() {
+    showComingSoon('Анализ расхода ингредиентов');
+}
+
+// Анимация карточек при загрузке
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+{% endblock %}

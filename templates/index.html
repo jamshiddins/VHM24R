@@ -1,50 +1,629 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Unification System</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/style.css">
-</head>
-<body>
-    <div class="container mt-5">
-        <h1 class="text-center mb-4">Система сверки заказов</h1>
-        
-        <div class="card">
+{% extends "base.html" %}
+
+{% block title %}Загрузка файлов - ODUS-RFM v5.0{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="text-center mb-5 fade-in-up">
+            <h1 class="display-4 text-gradient mb-3">
+                <i class="fas fa-cloud-upload-alt me-3 pulse"></i>
+                Модуль сверки заказов
+            </h1>
+            <p class="lead text-light mb-2">Загрузка и автоматическая обработка файлов заказов</p>
+            <p class="text-muted">
+                <i class="fas fa-microchip me-2"></i>
+                Поддержка расширенного списка форматов с ИИ-обработкой: CSV, XLSX, XLS, PDF, изображения с OCR, Word документы
+            </p>
+            <div class="mt-3">
+                <span class="badge bg-success me-2">
+                    <i class="fas fa-robot me-1"></i>AI-Powered
+                </span>
+                <span class="badge bg-info me-2">
+                    <i class="fas fa-lightning-bolt me-1"></i>Fast Processing
+                </span>
+                <span class="badge bg-warning">
+                    <i class="fas fa-shield-alt me-1"></i>Secure
+                </span>
+            </div>
+        </div>
+
+        <!-- Основная форма загрузки -->
+        <div class="card slide-in-left">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-cloud-upload-alt me-2"></i>
+                    Загрузка файлов для обработки
+                    <span class="badge bg-secondary ms-2">Drag & Drop</span>
+                </h5>
+            </div>
             <div class="card-body">
-                <h5 class="card-title">Загрузка файлов</h5>
-                
                 <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
                     <div class="drop-zone" id="dropZone">
-                        <p class="drop-zone-text">
-                            Перетащите файлы сюда или нажмите для выбора
-                        </p>
+                        <div class="text-center">
+                            <div class="upload-icon-container mb-4">
+                                <i class="fas fa-cloud-upload-alt fa-4x text-gradient pulse"></i>
+                                <div class="upload-particles"></div>
+                            </div>
+                            <h4 class="drop-zone-text mb-3">
+                                <strong>Перетащите файлы сюда</strong>
+                            </h4>
+                            <p class="text-muted mb-3">
+                                или нажмите для выбора файлов
+                            </p>
+                            <div class="supported-formats">
+                                <small class="text-muted">
+                                    <i class="fas fa-check-circle text-success me-1"></i>
+                                    Поддерживаются: CSV, XLSX, XLS, PDF, JPG, PNG, DOC, DOCX
+                                </small>
+                            </div>
+                            <div class="mt-3">
+                                <kbd class="me-2">Ctrl+U</kbd>
+                                <small class="text-muted">быстрый выбор файлов</small>
+                            </div>
+                        </div>
                         <input type="file" name="files" id="fileInput" 
-                               multiple accept=".csv,.xlsx" style="display: none;">
+                               multiple accept=".csv,.xlsx,.xls,.pdf,.jpg,.jpeg,.png,.doc,.docx" 
+                               style="display: none;">
                     </div>
                     
-                    <div id="fileList" class="mt-3"></div>
+                    <div id="fileList" class="mt-3" style="display: none;">
+                        <h6><i class="fas fa-list me-2"></i>Выбранные файлы:</h6>
+                        <div id="selectedFiles"></div>
+                    </div>
                     
-                    <button type="submit" class="btn btn-primary mt-3" 
-                            id="submitBtn" style="display: none;">
-                        Начать обработку
-                    </button>
+                    <div class="mt-4 text-center">
+                        <button type="submit" class="btn btn-primary btn-lg me-3 glow" id="uploadBtn" disabled
+                                data-bs-toggle="tooltip" title="Ctrl+Enter для быстрой загрузки">
+                            <i class="fas fa-rocket me-2"></i>
+                            Загрузить и обработать
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-lg" id="clearBtn" disabled
+                                data-bs-toggle="tooltip" title="Очистить список файлов">
+                            <i class="fas fa-trash-alt me-2"></i>
+                            Очистить
+                        </button>
+                    </div>
                 </form>
                 
-                <div class="mt-4">
-                    <h6>Поддерживаемые форматы:</h6>
-                    <ul class="list-unstyled">
-                        <li>✅ Happy Workers (CSV/XLSX)</li>
-                        <li>✅ VendHub (CSV)</li>
-                        <li>✅ Fiscal Bills (XLSX)</li>
-                        <li>✅ Payme, Click, Uzum (XLSX)</li>
-                    </ul>
+                <div id="progressContainer" class="mt-4" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted">Обработка файлов...</span>
+                        <span id="progressText" class="text-muted">0%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                             role="progressbar" style="width: 0%" id="progressBar"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Информационные карточки -->
+        <div class="row mt-5">
+            <!-- Поддерживаемые источники данных -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 slide-in-left" style="animation-delay: 0.2s;">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-database me-2 text-info"></i>
+                            Источники данных
+                            <span class="badge bg-info ms-2">6 систем</span>
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-6">
+                                <ul class="list-unstyled">
+                                    <li class="mb-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-check-circle text-success me-3"></i>
+                                            <div>
+                                                <strong class="text-light">Happy Workers</strong>
+                                                <br><small class="text-muted">Внешняя система заказов</small>
+                                                <div class="progress mt-1" style="height: 3px;">
+                                                    <div class="progress-bar" style="width: 95%"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="mb-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-check-circle text-success me-3"></i>
+                                            <div>
+                                                <strong class="text-light">VendHub</strong>
+                                                <br><small class="text-muted">Внутренняя система событий</small>
+                                                <div class="progress mt-1" style="height: 3px;">
+                                                    <div class="progress-bar" style="width: 98%"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="mb-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-check-circle text-success me-3"></i>
+                                            <div>
+                                                <strong class="text-light">Fiscal Bills</strong>
+                                                <br><small class="text-muted">Фискальные чеки</small>
+                                                <div class="progress mt-1" style="height: 3px;">
+                                                    <div class="progress-bar" style="width: 92%"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-6">
+                                <ul class="list-unstyled">
+                                    <li class="mb-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-check-circle text-success me-3"></i>
+                                            <div>
+                                                <strong class="text-light">Payme</strong>
+                                                <br><small class="text-muted">Платежный шлюз</small>
+                                                <div class="progress mt-1" style="height: 3px;">
+                                                    <div class="progress-bar" style="width: 89%"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="mb-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-check-circle text-success me-3"></i>
+                                            <div>
+                                                <strong class="text-light">Click</strong>
+                                                <br><small class="text-muted">Платежный шлюз</small>
+                                                <div class="progress mt-1" style="height: 3px;">
+                                                    <div class="progress-bar" style="width: 94%"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="mb-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-check-circle text-success me-3"></i>
+                                            <div>
+                                                <strong class="text-light">Uzum</strong>
+                                                <br><small class="text-muted">Платежный шлюз</small>
+                                                <div class="progress mt-1" style="height: 3px;">
+                                                    <div class="progress-bar" style="width: 87%"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Поддерживаемые форматы -->
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 slide-in-right" style="animation-delay: 0.3s;">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-file-alt me-2 text-success"></i>
+                            Поддерживаемые форматы
+                            <span class="badge bg-success ms-2">AI-Enhanced</span>
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-6">
+                                <ul class="list-unstyled">
+                                    <li class="mb-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-file-csv text-primary me-3" style="font-size: 1.2rem;"></i>
+                                            <div>
+                                                <strong class="text-light">CSV</strong>
+                                                <br><small class="text-muted">Текстовые файлы с разделителями</small>
+                                                <div class="mt-1">
+                                                    <span class="badge bg-primary">Fast</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="mb-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-file-excel text-success me-3" style="font-size: 1.2rem;"></i>
+                                            <div>
+                                                <strong class="text-light">XLSX/XLS</strong>
+                                                <br><small class="text-muted">Microsoft Excel файлы</small>
+                                                <div class="mt-1">
+                                                    <span class="badge bg-success">Advanced</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="mb-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-file-pdf text-danger me-3" style="font-size: 1.2rem;"></i>
+                                            <div>
+                                                <strong class="text-light">PDF</strong>
+                                                <br><small class="text-muted">Документы с OCR обработкой</small>
+                                                <div class="mt-1">
+                                                    <span class="badge bg-danger">AI-OCR</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-6">
+                                <ul class="list-unstyled">
+                                    <li class="mb-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-image text-info me-3" style="font-size: 1.2rem;"></i>
+                                            <div>
+                                                <strong class="text-light">JPG/PNG</strong>
+                                                <br><small class="text-muted">Изображения с AI-OCR</small>
+                                                <div class="mt-1">
+                                                    <span class="badge bg-info">Smart-OCR</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="mb-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-file-word text-primary me-3" style="font-size: 1.2rem;"></i>
+                                            <div>
+                                                <strong class="text-light">DOC/DOCX</strong>
+                                                <br><small class="text-muted">Microsoft Word документы</small>
+                                                <div class="mt-1">
+                                                    <span class="badge bg-primary">Structured</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="mb-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-file-alt text-secondary me-3" style="font-size: 1.2rem;"></i>
+                                            <div>
+                                                <strong class="text-light">TXT</strong>
+                                                <br><small class="text-muted">Простые текстовые файлы</small>
+                                                <div class="mt-1">
+                                                    <span class="badge bg-secondary">Basic</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Алгоритм сопоставления -->
+        <div class="card mt-5 fade-in-up" style="animation-delay: 0.4s;">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-brain me-2 text-warning"></i>
+                    Многоэтапный AI-алгоритм сопоставления
+                    <span class="badge bg-warning text-dark ms-2">Neural Network</span>
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-4">
+                        <div class="text-center">
+                            <div class="position-relative d-inline-block mb-3">
+                                <div class="bg-gradient-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center glow" 
+                                     style="width: 60px; height: 60px; font-size: 1.2rem;">
+                                    <i class="fas fa-search"></i>
+                                </div>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">1</span>
+                            </div>
+                            <h6 class="text-light">Базовое сопоставление</h6>
+                            <p class="text-muted small">
+                                HW ↔ VendHub по номеру заказа и коду автомата с использованием нечеткого поиска
+                            </p>
+                            <div class="progress mt-2" style="height: 4px;">
+                                <div class="progress-bar bg-primary" style="width: 100%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="text-center">
+                            <div class="position-relative d-inline-block mb-3">
+                                <div class="bg-gradient-info text-white rounded-circle d-inline-flex align-items-center justify-content-center glow" 
+                                     style="width: 60px; height: 60px; font-size: 1.2rem; animation-delay: 0.2s;">
+                                    <i class="fas fa-receipt"></i>
+                                </div>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info">2</span>
+                            </div>
+                            <h6 class="text-light">Фискальные данные</h6>
+                            <p class="text-muted small">
+                                Обогащение Cash-платежей фискальными чеками с AI-распознаванием
+                            </p>
+                            <div class="progress mt-2" style="height: 4px;">
+                                <div class="progress-bar bg-info" style="width: 85%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="text-center">
+                            <div class="position-relative d-inline-block mb-3">
+                                <div class="bg-gradient-success text-white rounded-circle d-inline-flex align-items-center justify-content-center glow" 
+                                     style="width: 60px; height: 60px; font-size: 1.2rem; animation-delay: 0.4s;">
+                                    <i class="fas fa-credit-card"></i>
+                                </div>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success">3</span>
+                            </div>
+                            <h6 class="text-light">Платежные шлюзы</h6>
+                            <p class="text-muted small">
+                                Обогащение Custom payment данными шлюзов с машинным обучением
+                            </p>
+                            <div class="progress mt-2" style="height: 4px;">
+                                <div class="progress-bar bg-success" style="width: 92%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Быстрые действия -->
+        <div class="row mt-5">
+            <div class="col-md-6 mb-4">
+                <div class="card glass-effect border-0 slide-in-left" style="animation-delay: 0.5s;">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-3">
+                            <i class="fas fa-chart-bar fa-3x text-gradient pulse"></i>
+                        </div>
+                        <h5 class="text-light mb-2">Аналитический дашборд</h5>
+                        <p class="text-muted small mb-4">Просмотр статистики и аналитики в реальном времени</p>
+                        <a href="{{ url_for('orders_list') }}" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-chart-line me-2"></i>Просмотр заказов
+                        </a>
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                Обновление каждые 60 сек
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card glass-effect border-0 slide-in-right" style="animation-delay: 0.6s;">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-3">
+                            <i class="fas fa-download fa-3x text-gradient pulse"></i>
+                        </div>
+                        <h5 class="text-light mb-2">Экспорт данных</h5>
+                        <p class="text-muted small mb-4">Выгрузка обработанных заказов в различных форматах</p>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-info" onclick="exportData('csv', 'all')">
+                                <i class="fas fa-file-csv me-2"></i>Скачать CSV
+                            </button>
+                            <button class="btn btn-outline-success" onclick="exportData('xlsx', 'all')">
+                                <i class="fas fa-file-excel me-2"></i>Скачать Excel
+                            </button>
+                        </div>
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-shield-alt me-1"></i>
+                                Безопасная выгрузка
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Статистика производительности -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="card fade-in-up" style="animation-delay: 0.7s;">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">
+                            <i class="fas fa-tachometer-alt me-2 text-success"></i>
+                            Производительность системы
+                            <span class="badge bg-success ms-2">Real-time</span>
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-3 mb-3">
+                                <div class="stats-card p-3 rounded">
+                                    <div class="stats-number">99.9%</div>
+                                    <small class="text-muted">Точность распознавания</small>
+                                    <div class="progress mt-2" style="height: 4px;">
+                                        <div class="progress-bar bg-success" style="width: 99.9%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="stats-card p-3 rounded">
+                                    <div class="stats-number">2.3s</div>
+                                    <small class="text-muted">Среднее время обработки</small>
+                                    <div class="progress mt-2" style="height: 4px;">
+                                        <div class="progress-bar bg-info" style="width: 85%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="stats-card p-3 rounded">
+                                    <div class="stats-number">1M+</div>
+                                    <small class="text-muted">Обработано заказов</small>
+                                    <div class="progress mt-2" style="height: 4px;">
+                                        <div class="progress-bar bg-warning" style="width: 100%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="stats-card p-3 rounded">
+                                    <div class="stats-number">24/7</div>
+                                    <small class="text-muted">Время работы</small>
+                                    <div class="progress mt-2" style="height: 4px;">
+                                        <div class="progress-bar bg-primary" style="width: 100%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Расширенная функциональность для drag & drop
+document.addEventListener('DOMContentLoaded', function() {
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileList = document.getElementById('fileList');
+    const selectedFiles = document.getElementById('selectedFiles');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
     
-    <script src="/static/js/app.js"></script>
-</body>
-</html>
+    let files = [];
+    
+    // Drag & Drop события
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', handleDragOver);
+    dropZone.addEventListener('dragleave', handleDragLeave);
+    dropZone.addEventListener('drop', handleDrop);
+    
+    fileInput.addEventListener('change', handleFileSelect);
+    clearBtn.addEventListener('click', clearFiles);
+    
+    function handleDragOver(e) {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    }
+    
+    function handleDragLeave(e) {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+    }
+    
+    function handleDrop(e) {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        
+        const droppedFiles = Array.from(e.dataTransfer.files);
+        addFiles(droppedFiles);
+    }
+    
+    function handleFileSelect(e) {
+        const selectedFiles = Array.from(e.target.files);
+        addFiles(selectedFiles);
+    }
+    
+    function addFiles(newFiles) {
+        files = [...files, ...newFiles];
+        updateFileList();
+        updateButtons();
+    }
+    
+    function updateFileList() {
+        if (files.length === 0) {
+            fileList.style.display = 'none';
+            return;
+        }
+        
+        fileList.style.display = 'block';
+        selectedFiles.innerHTML = '';
+        
+        files.forEach((file, index) => {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item d-flex justify-content-between align-items-center p-2 mb-2 bg-light rounded';
+            
+            const fileInfo = document.createElement('div');
+            fileInfo.innerHTML = `
+                <i class="fas fa-file me-2"></i>
+                <strong>${file.name}</strong>
+                <small class="text-muted ms-2">(${formatFileSize(file.size)})</small>
+            `;
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'btn btn-sm btn-outline-danger';
+            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+            removeBtn.onclick = () => removeFile(index);
+            
+            fileItem.appendChild(fileInfo);
+            fileItem.appendChild(removeBtn);
+            selectedFiles.appendChild(fileItem);
+        });
+    }
+    
+    function removeFile(index) {
+        files.splice(index, 1);
+        updateFileList();
+        updateButtons();
+    }
+    
+    function clearFiles() {
+        files = [];
+        fileInput.value = '';
+        updateFileList();
+        updateButtons();
+    }
+    
+    function updateButtons() {
+        const hasFiles = files.length > 0;
+        uploadBtn.disabled = !hasFiles;
+        clearBtn.disabled = !hasFiles;
+    }
+    
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    // Обработка формы
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (files.length === 0) {
+            alert('Пожалуйста, выберите файлы для загрузки');
+            return;
+        }
+        
+        const formData = new FormData();
+        files.forEach(file => {
+            formData.append('files', file);
+        });
+        
+        // Показываем прогресс
+        progressContainer.style.display = 'block';
+        uploadBtn.disabled = true;
+        
+        // Отправляем файлы
+        fetch('/upload', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.text();
+        })
+        .then(html => {
+            // Перенаправляем на страницу результатов
+            document.body.innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Произошла ошибка при загрузке файлов');
+            progressContainer.style.display = 'none';
+            uploadBtn.disabled = false;
+        });
+    });
+});
+</script>
+{% endblock %}

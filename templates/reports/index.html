@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+
+{% block title %}Отчеты - ODUS-RFM v5.0{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center mb-4">
+                <h1 class="display-4">
+                    <i class="fas fa-chart-pie text-primary me-3"></i>
+                    Центр отчетности
+                </h1>
+                <p class="lead">Аналитические отчеты по всем модулям системы</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Основные отчеты -->
+    <div class="row mb-4">
+        <!-- Ежедневный отчет -->
+        <div class="col-md-6 mb-3">
+            <div class="card h-100 border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calendar-day me-2"></i>
+                        Ежедневный отчет
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Сводный отчет по операциям за день: заказы, продажи, инкассации</p>
+                    <div class="mb-3">
+                        <label for="dailyReportDate" class="form-label">Дата отчета:</label>
+                        <input type="date" class="form-control" id="dailyReportDate" value="{{ today }}">
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <button class="btn btn-primary" onclick="openDailyReport()">
+                            <i class="fas fa-eye me-2"></i>Просмотр
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="downloadDailyReport()">
+                            <i class="fas fa-download me-2"></i>Скачать
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Финансовый отчет -->
+        <div class="col-md-6 mb-3">
+            <div class="card h-100 border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-money-bill-wave me-2"></i>
+                        Финансовый отчет
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Финансовая сводка: обороты, сверка платежных систем, остатки</p>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label for="finReportStart" class="form-label">От:</label>
+                            <input type="date" class="form-control" id="finReportStart" value="{{ today }}">
+                        </div>
+                        <div class="col-6">
+                            <label for="finReportEnd" class="form-label">До:</label>
+                            <input type="date" class="form-control" id="finReportEnd" value="{{ today }}">
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <button class="btn btn-success" onclick="openFinancialReport()">
+                            <i class="fas fa-eye me-2"></i>Просмотр
+                        </button>
+                        <button class="btn btn-outline-success" onclick="downloadFinancialReport()">
+                            <i class="fas fa-download me-2"></i>Скачать
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Отчет по рецептуре -->
+        <div class="col-md-6 mb-3">
+            <div class="card h-100 border-info">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-utensils me-2"></i>
+                        Отчет по рецептуре
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Анализ расхода ингредиентов, себестоимость, остатки на складе</p>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label for="recipeReportStart" class="form-label">От:</label>
+                            <input type="date" class="form-control" id="recipeReportStart" value="{{ today }}">
+                        </div>
+                        <div class="col-6">
+                            <label for="recipeReportEnd" class="form-label">До:</label>
+                            <input type="date" class="form-control" id="recipeReportEnd" value="{{ today }}">
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <button class="btn btn-info" onclick="showComingSoon('Отчет по рецептуре')">
+                            <i class="fas fa-eye me-2"></i>Просмотр
+                        </button>
+                        <button class="btn btn-outline-info" onclick="showComingSoon('Экспорт отчета по рецептуре')">
+                            <i class="fas fa-download me-2"></i>Скачать
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Сводный отчет -->
+        <div class="col-md-6 mb-3">
+            <div class="card h-100 border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Сводный отчет
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Комплексный анализ работы всех систем за период</p>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label for="summaryReportStart" class="form-label">От:</label>
+                            <input type="date" class="form-control" id="summaryReportStart" value="{{ today }}">
+                        </div>
+                        <div class="col-6">
+                            <label for="summaryReportEnd" class="form-label">До:</label>
+                            <input type="date" class="form-control" id="summaryReportEnd" value="{{ today }}">
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <button class="btn btn-warning" onclick="showComingSoon('Сводный отчет')">
+                            <i class="fas fa-eye me-2"></i>Просмотр
+                        </button>
+                        <button class="btn btn-outline-warning" onclick="showComingSoon('Экспорт сводного отчета')">
+                            <i class="fas fa-download me-2"></i>Скачать
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Быстрая статистика -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-tachometer-alt me-2"></i>
+                        Быстрая статистика
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h4 class="text-primary">{{ total_orders or 0 }}</h4>
+                                <small class="text-muted">Заказов сегодня</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h4 class="text-success">{{ total_revenue or 0 }}</h4>
+                                <small class="text-muted">Выручка (сум)</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="border-end">
+                                <h4 class="text-info">{{ active_machines or 0 }}</h4>
+                                <small class="text-muted">Активных автоматов</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <h4 class="text-warning">{{ pending_collections or 0 }}</h4>
+                            <small class="text-muted">Ожидают инкассации</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Настройки отчетов -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-cog me-2"></i>
+                        Настройки и действия
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <button class="btn btn-primary" onclick="showComingSoon('Автоматические отчеты')">
+                                    <i class="fas fa-robot me-2"></i>
+                                    Автоотчеты
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <button class="btn btn-success" onclick="showComingSoon('Настройки экспорта')">
+                                    <i class="fas fa-file-export me-2"></i>
+                                    Экспорт
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <button class="btn btn-info" onclick="showComingSoon('Email рассылка')">
+                                    <i class="fas fa-envelope me-2"></i>
+                                    Рассылка
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-grid">
+                                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>
+                                    К дашборду
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно "В разработке" -->
+<div class="modal fade" id="comingSoonModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">В разработке</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <i class="fas fa-tools fa-3x text-muted mb-3"></i>
+                    <p class="mb-0">Функция "<span id="featureName"></span>" находится в разработке</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Устанавливаем сегодняшнюю дату по умолчанию
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date().toISOString().split('T')[0];
+    const dateInputs = document.querySelectorAll('input[type="date"]');
+    dateInputs.forEach(input => {
+        if (!input.value) {
+            input.value = today;
+        }
+    });
+});
+
+function showComingSoon(featureName) {
+    document.getElementById('featureName').textContent = featureName;
+    const modal = new bootstrap.Modal(document.getElementById('comingSoonModal'));
+    modal.show();
+}
+
+function openDailyReport() {
+    const date = document.getElementById('dailyReportDate').value;
+    window.open(`{{ url_for('daily_report') }}?date=${date}`, '_blank');
+}
+
+function downloadDailyReport() {
+    const date = document.getElementById('dailyReportDate').value;
+    showComingSoon('Скачивание ежедневного отчета');
+}
+
+function openFinancialReport() {
+    const startDate = document.getElementById('finReportStart').value;
+    const endDate = document.getElementById('finReportEnd').value;
+    window.open(`{{ url_for('financial_report') }}?start_date=${startDate}&end_date=${endDate}`, '_blank');
+}
+
+function downloadFinancialReport() {
+    showComingSoon('Скачивание финансового отчета');
+}
+
+// Анимация карточек при загрузке
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            card.style.transition = 'all 0.5s ease';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+{% endblock %}
